@@ -27,7 +27,7 @@ function placePixel(x, y) {
     if (isCanvasUnlocked && !cooldown) {
         if (pixelsPlaced < 5) {
             ctx.fillStyle = currentColor;
-            ctx.fillRect(x, y, 1, 1);
+            ctx.fillRect(x, y, 10, 10); // Change size to 10x10 pixels
             pixelsPlaced++;
 
             if (pixelsPlaced === 5) {
@@ -36,6 +36,7 @@ function placePixel(x, y) {
         }
     }
 }
+
 
 // Function to start the cooldown
 function startCooldown() {
