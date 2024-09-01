@@ -80,4 +80,10 @@ canvas.addEventListener('click', function(event) {
     saveCanvas(); // Save the canvas state
 });
 
-colorPicker.addEventListener('input', function
+// Load the current color from the color picker
+colorPicker.addEventListener('input', function() {
+    color = colorPicker.value;
+});
+
+// Load the canvas when the page is loaded
+loadCanvas();
