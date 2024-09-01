@@ -78,6 +78,36 @@ submitCodeButton.addEventListener('click', () => {
     }
 });
 
+// Load previous canvas state
+function loadCanvasState() {
+    const savedCanvas = localStorage.getItem('pixelCanvasState');
+    if (savedCanvas) {
+        const image = new Image();
+        image.src = savedCanvas;
+        image.onload = () => {
+            ctx.drawImage(image, 0, 0);
+        };
+    }
+}
+
+// Save current canvas state
+function saveCanvasState() {
+    const canvasData = canvas.toDataURL();
+    localStorage.setItem('pixelCanvasState', canvasData);
+}
+
+// Call loadCanvasState on page load
+window.onload = loadCanvasState;
+
+// Save canvas state on every pixel placement
+canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left));
+    const y = Math.floor((e.clientY - rect.top));
+    placePixel(x, y);
+    saveCanvasState(); // Save the canvas state after placing a pixel
+});
+
 // Display the current color in the color box
 currentColorBox.style.backgroundColor = currentColor;
 
