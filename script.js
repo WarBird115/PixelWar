@@ -27,7 +27,7 @@ function placePixel(x, y) {
     if (isCanvasUnlocked && !cooldown) {
         if (pixelsPlaced < 5) {
             ctx.fillStyle = currentColor;
-            ctx.fillRect(x, y, 20, 20); // Change pixel size to 20x20
+            ctx.fillRect(x, y, 10, 10); // Each pixel is 10x10
             pixelsPlaced++;
 
             if (pixelsPlaced === 5) {
