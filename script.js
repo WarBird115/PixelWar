@@ -1,6 +1,7 @@
 const canvas = document.getElementById('pixelCanvas');
 const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
+const overlay = document.getElementById('overlay');
 let color = '#000000';
 let accessCode = '';
 
@@ -44,6 +45,14 @@ function savePixel(x, y) {
     localStorage.setItem('pixels', JSON.stringify(pixels));
 }
 
+// Enable canvas and remove overlay
+function unlockCanvas() {
+    overlay.style.display = 'none'; // Hide the overlay
+    canvas.style.cursor = 'crosshair'; // Change cursor back to normal
+    canvas.style.pointerEvents = 'auto'; // Enable interactions
+}
+
+// Canvas click event (only works when unlocked)
 canvas.addEventListener('click', function(event) {
     const x = Math.floor(event.offsetX / 10) * 10;
     const y = Math.floor(event.offsetY / 10) * 10;
@@ -64,6 +73,7 @@ document.getElementById('submitCode').addEventListener('click', function() {
     const userInput = document.getElementById('userInput').value;
     if (userInput === accessCode) {
         document.getElementById('accessSection').style.display = 'none'; // Hide access section
+        unlockCanvas(); // Unlock the canvas
         alert('Access granted! Enjoy creating on the canvas!');
     } else {
         alert('Incorrect code. Please try again.');
