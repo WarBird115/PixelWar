@@ -37,7 +37,6 @@ function placePixel(x, y) {
     }
 }
 
-
 // Function to start the cooldown
 function startCooldown() {
     cooldown = true;
