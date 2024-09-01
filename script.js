@@ -1,68 +1,56 @@
 const canvas = document.getElementById('pixelCanvas');
 const ctx = canvas.getContext('2d');
-const pixelSize = 10; // Size of each pixel
-let color = '#000000'; // Default color
+let color = '#000000';
 
-// Load saved pixels from local storage
-function loadPixels() {
-    const savedPixels = JSON.parse(localStorage.getItem('pixels'));
-    if (savedPixels) {
-        savedPixels.forEach(pixel => {
-            ctx.fillStyle = pixel.color;
-            ctx.fillRect(pixel.x * pixelSize, pixel.y * pixelSize, pixelSize, pixelSize);
-        });
-    }
-}
-
-// Save the current pixel state to local storage
-function savePixels(x, y, color) {
-    let savedPixels = JSON.parse(localStorage.getItem('pixels')) || [];
-    const existingPixelIndex = savedPixels.findIndex(pixel => pixel.x === x / pixelSize && pixel.y === y / pixelSize);
-    if (existingPixelIndex === -1) {
-        savedPixels.push({ x: x / pixelSize, y: y / pixelSize, color });
-    } else {
-        savedPixels[existingPixelIndex].color = color;
-    }
-    localStorage.setItem('pixels', JSON.stringify(savedPixels));
-}
-
-// Draw on canvas
-canvas.addEventListener('click', function(event) {
-    const x = Math.floor(event.offsetX / pixelSize) * pixelSize;
-    const y = Math.floor(event.offsetY / pixelSize) * pixelSize;
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, pixelSize, pixelSize);
-    savePixels(x, y, color);
-});
-
-// Right-click to pick color from canvas
-canvas.addEventListener('contextmenu', function(event) {
-    event.preventDefault(); // Prevent the context menu from appearing
-    const x = Math.floor(event.offsetX / pixelSize) * pixelSize;
-    const y = Math.floor(event.offsetY / pixelSize) * pixelSize;
-    const imageData = ctx.getImageData(x, y, 1, 1).data;
-    color = rgbToHex(imageData[0], imageData[1], imageData[2]);
-    document.getElementById('colorPicker').value = color;
-    document.getElementById('currentColor').style.backgroundColor = color;
-});
-
-// Convert RGB to HEX
-function rgbToHex(r, g, b) {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
-
-// Load pixels when the page loads
-window.onload = loadPixels;
-
-// Color picker functionality
+// Update the color preview box when a new color is selected
 const colorPicker = document.getElementById('colorPicker');
 const currentColorBox = document.getElementById('currentColor');
 
-colorPicker.addEventListener('input', function() {
-    color = this.value; // Set the selected color
-    currentColorBox.style.backgroundColor = color; // Update the current color box
+colorPicker.addEventListener('input', function(event) {
+    color = event.target.value;
+    currentColorBox.style.backgroundColor = color;
 });
 
+canvas.addEventListener('click', function(event) {
+    const x = Math.floor(event.offsetX / 10) * 10;
+    const y = Math.floor(event.offsetY / 10) * 10;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, 10, 10);
+    saveCanvasState();
+});
 
+// Use middle mouse click to pick a color from the canvas
+canvas.addEventListener('mousedown', function(event) {
+    if (event.button === 1) { // Middle mouse button
+        const x = Math.floor(event.offsetX / 10) * 10;
+        const y = Math.floor(event.offsetY / 10) * 10;
+        const pixelData = ctx.getImageData(x, y, 1, 1).data;
+        const pickedColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+        colorPicker.value = rgbToHex(pixelData[0], pixelData[1], pixelData[2]);
+        currentColorBox.style.backgroundColor = colorPicker.value;
+        color = colorPicker.value;
+    }
+});
 
+function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+}
 
+function saveCanvasState() {
+    const canvasData = canvas.toDataURL();
+    localStorage.setItem('pixelCanvasState', canvasData);
+}
+
+function loadCanvasState() {
+    const savedCanvasData = localStorage.getItem('pixelCanvasState');
+    if (savedCanvasData) {
+        const img = new Image();
+        img.src = savedCanvasData;
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0);
+        }
+    }
+}
+
+// Load the canvas state when the page loads
+window.onload = loadCanvasState;
