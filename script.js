@@ -24,13 +24,15 @@ colorPicker.addEventListener('input', (e) => {
 
 // Function to place a pixel on the canvas
 function placePixel(x, y) {
-    if (isCanvasUnlocked && !cooldown && pixelsPlaced < 5) {
-        ctx.fillStyle = currentColor;
-        ctx.fillRect(x, y, 1, 1);
-        pixelsPlaced++;
+    if (isCanvasUnlocked && !cooldown) {
+        if (pixelsPlaced < 5) {
+            ctx.fillStyle = currentColor;
+            ctx.fillRect(x, y, 1, 1);
+            pixelsPlaced++;
 
-        if (pixelsPlaced === 5) {
-            startCooldown();
+            if (pixelsPlaced === 5) {
+                startCooldown(); // Start cooldown when the 5th pixel is placed
+            }
         }
     }
 }
