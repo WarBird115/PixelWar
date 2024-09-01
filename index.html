@@ -5,18 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Wars</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
+        #colorPicker {
+            margin-top: 10px;
+            cursor: pointer;
         }
-        canvas {
+        #colorOptions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .color-box {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
             border: 1px solid #000;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to Pixel Wars</h1>
-    <canvas id="pixelCanvas" width="256" height="256"></canvas>
+    <h1>Pixel Wars</h1>
+    <canvas id="pixelCanvas" width="500" height="500"></canvas>
+    
+    <!-- Color Picker Input -->
+    <div id="colorOptions">
+        <input type="color" id="colorPicker" value="#000000">
+        <div id="currentColor" class="color-box" style="background-color: #000000;"></div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
+
+
+
