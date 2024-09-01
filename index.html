@@ -5,15 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Wars</title>
     <style>
-        #colorPicker {
-            margin-top: 10px;
-            cursor: pointer;
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        #pixelCanvas {
+            border: 1px solid #000; /* Adds border to the canvas */
+            margin-top: 20px;
+            cursor: crosshair;
+        }
+
         #colorOptions {
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            align-items: center;
         }
+
         .color-box {
             width: 30px;
             height: 30px;
@@ -35,6 +53,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 

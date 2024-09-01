@@ -1,7 +1,7 @@
 const canvas = document.getElementById('pixelCanvas');
 const ctx = canvas.getContext('2d');
 const pixelSize = 10; // Size of each pixel
-let color = '#000000';
+let color = '#000000'; // Default color
 
 // Load saved pixels from local storage
 function loadPixels() {
@@ -41,7 +41,6 @@ canvas.addEventListener('contextmenu', function(event) {
     const x = Math.floor(event.offsetX / pixelSize) * pixelSize;
     const y = Math.floor(event.offsetY / pixelSize) * pixelSize;
     const imageData = ctx.getImageData(x, y, 1, 1).data;
-    const pickedColor = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
     color = rgbToHex(imageData[0], imageData[1], imageData[2]);
     document.getElementById('colorPicker').value = color;
     document.getElementById('currentColor').style.backgroundColor = color;
@@ -63,6 +62,7 @@ colorPicker.addEventListener('input', function() {
     color = this.value; // Set the selected color
     currentColorBox.style.backgroundColor = color; // Update the current color box
 });
+
 
 
 
