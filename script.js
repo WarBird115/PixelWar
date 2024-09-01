@@ -17,7 +17,16 @@ function loadPixels() {
 // Save the current pixel state to local storage
 function savePixels(x, y, color) {
     let savedPixels = JSON.parse(localStorage.getItem('pixels')) || [];
-    savedPixels.push({ x: x / pixelSize, y: y / pixelSize, color });
+    
+    // Check if the pixel is already saved; if not, add it
+    const existingPixelIndex = savedPixels.findIndex(pixel => pixel.x === x / pixelSize && pixel.y === y / pixelSize);
+    if (existingPixelIndex === -1) {
+        savedPixels.push({ x: x / pixelSize, y: y / pixelSize, color });
+    } else {
+        // Update the color if the pixel already exists
+        savedPixels[existingPixelIndex].color = color;
+    }
+
     localStorage.setItem('pixels', JSON.stringify(savedPixels));
 }
 
