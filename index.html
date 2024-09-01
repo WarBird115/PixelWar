@@ -101,6 +101,11 @@
         #welcomeText li {
             margin-bottom: 5px;
         }
+
+        #adminMessage {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -118,9 +123,10 @@
 
     <!-- Access Code Input -->
     <div id="accessSection">
-        <label for="userInput">Enter Access Code:</label>
+        <label for="userInput">Enter Access Code or Admin Password:</label>
         <input type="text" id="userInput" placeholder="Enter your code here">
         <button id="submitCode">Submit</button>
+        <p id="adminMessage"></p>
     </div>
 
     <!-- Welcome Text -->
