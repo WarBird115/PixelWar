@@ -17,10 +17,6 @@ let countdownTimer;
 // Initialize pixel color
 let currentColor = colorPicker.value;
 
-// Admin password
-const adminPassword = "Itsameamario1"; // Your admin password
-let randomAccessCode = ''; // To store the generated access code
-
 // Array to keep track of placed pixels
 const placedPixels = [];
 const pixelSize = 10; // Adjusted pixel size
@@ -31,23 +27,31 @@ colorPicker.addEventListener('input', (e) => {
     currentColorBox.style.backgroundColor = currentColor;
 });
 
+// Admin password
+const adminPassword = "admin123"; // Set your admin password here
+
+// Function to generate a random 5-digit code
+function generateRandomCode() {
+    return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit number
+}
+
+let currentGeneratedCode = generateRandomCode(); // Generate initial code
+
 // Function to place a pixel on the canvas
 function placePixel(x, y) {
     if (isCanvasUnlocked && !cooldown) {
-        // Calculate grid position
         const gridX = Math.floor(x / pixelSize) * pixelSize;
         const gridY = Math.floor(y / pixelSize) * pixelSize;
         const pixelKey = `${gridX},${gridY}`;
 
-        // Check if the pixel position is already occupied
         if (!placedPixels.includes(pixelKey)) {
             ctx.fillStyle = currentColor;
-            ctx.fillRect(gridX, gridY, pixelSize, pixelSize); // Set pixel size to pixelSize x pixelSize
+            ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
             placedPixels.push(pixelKey);
             pixelsPlaced++;
 
             if (pixelsPlaced === 1) {
-                startCooldown(); // Start cooldown when the 1th pixel is placed
+                startCooldown();
             }
         }
     }
@@ -85,16 +89,22 @@ canvas.addEventListener('click', (e) => {
     const x = Math.floor((e.clientX - rect.left));
     const y = Math.floor((e.clientY - rect.top));
     placePixel(x, y);
-    saveCanvasState(); // Save the canvas state after placing a pixel
+    saveCanvasState();
 });
 
 // Function to handle access code submission
 submitCodeButton.addEventListener('click', () => {
     const code = userInput.value;
 
-    // Check if the entered code matches the admin password or the random access code
-    if (code === adminPassword || code === randomAccessCode) {
+    // Check if the entered code is the admin password
+    if (code === adminPassword) {
         overlay.style.display = 'none'; // Unlock the canvas
+        isCanvasUnlocked = true; // Set the flag to true
+        wipeCanvasButton.style.display = 'block'; // Show the wipe button
+        userInput.value = ''; // Clear the input field
+        loadCanvasState(); // Load previous canvas state
+    } else if (code === currentGeneratedCode) {
+        overlay.style.display = 'none'; // Unlock the canvas with the generated code
         isCanvasUnlocked = true; // Set the flag to true
         wipeCanvasButton.style.display = 'block'; // Show the wipe button
         userInput.value = ''; // Clear the input field
@@ -110,6 +120,7 @@ wipeCanvasButton.addEventListener('click', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         placedPixels.length = 0; // Clear the placed pixels array
         localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
+        currentGeneratedCode = generateRandomCode(); // Generate a new random code
     }
 });
 
@@ -133,50 +144,6 @@ function loadCanvasState() {
         if (timeLeft > 0) {
             startCooldown(timeLeft);
         }
-    }
-
-    // Load or generate the access code
-    loadOrGenerateAccessCode();
-}
-
-// Function to generate a random 5-digit code
-function generateRandomCode() {
-    return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit code
-}
-
-// Function to check if it's Sunday after 17:00
-function isSundayAfterFive() {
-    const now = new Date();
-    return now.getDay() === 0 && now.getHours() >= 17; // Sunday = 0
-}
-
-// Function to load or generate the access code
-function loadOrGenerateAccessCode() {
-    const lastGeneratedCode = localStorage.getItem('randomAccessCode');
-    const lastGeneratedTime = localStorage.getItem('lastGeneratedTime');
-    const now = new Date();
-
-    if (lastGeneratedCode && lastGeneratedTime) {
-        const lastTime = new Date(parseInt(lastGeneratedTime));
-
-        // If it's Sunday after 17:00 and the last code was generated earlier, generate a new code
-        if (isSundayAfterFive() && now > lastTime) {
-            const newCode = generateRandomCode();
-            randomAccessCode = newCode; // Store the generated code in the variable
-            localStorage.setItem('randomAccessCode', newCode);
-            localStorage.setItem('lastGeneratedTime', Date.now());
-            console.log("New Access Code Generated: ", newCode);
-        } else {
-            randomAccessCode = lastGeneratedCode; // Use the last generated code
-            console.log("Access Code Used: ", randomAccessCode);
-        }
-    } else {
-        // Generate and store a new code if none exists
-        const newCode = generateRandomCode();
-        randomAccessCode = newCode; // Store the generated code in the variable
-        localStorage.setItem('randomAccessCode', newCode);
-        localStorage.setItem('lastGeneratedTime', Date.now());
-        console.log("First Access Code Generated: ", newCode); // Display the new code
     }
 }
 
