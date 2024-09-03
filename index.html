@@ -122,6 +122,7 @@
     
     <div id="colorOptions">
         <input type="color" id="colorPicker" value="#000000">
+        <div id="currentColor" class="color-box" style="background-color: #000000;"></div>
         <div id="countdown" style="color: #ffcc00; margin-left: 10px;">Cooldown: 0:00</div>
     </div>
 
@@ -150,6 +151,7 @@
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('overlay');
         const colorPicker = document.getElementById('colorPicker');
+        const currentColorBox = document.getElementById('currentColor');
         const countdownDisplay = document.getElementById('countdown');
         const submitCodeButton = document.getElementById('submitCode');
         const userInput = document.getElementById('userInput');
@@ -171,15 +173,16 @@
         // Update the current color display
         colorPicker.addEventListener('input', (e) => {
             currentColor = e.target.value;
+            currentColorBox.style.backgroundColor = currentColor;
         });
 
         // Function to place a pixel on the canvas
         function placePixel(x, y) {
-            if (isCanvasUnlocked && !cooldown && pixelsPlaced < 1) { // Limit to one pixel
+            if (isCanvasUnlocked && !cooldown) {
                 // Calculate grid position
                 const gridX = Math.floor(x / pixelSize) * pixelSize;
                 const gridY = Math.floor(y / pixelSize) * pixelSize;
-                const pixelKey = ${gridX},${gridY};
+                const pixelKey = `${gridX},${gridY}`;
 
                 // Check if the pixel position is already occupied
                 if (!placedPixels.includes(pixelKey)) {
@@ -188,8 +191,8 @@
                     placedPixels.push(pixelKey);
                     pixelsPlaced++;
 
-                    if (pixelsPlaced === 1) {
-                        startCooldown(); // Start cooldown after one pixel is placed
+                    if (pixelsPlaced === 5) {
+                        startCooldown(); // Start cooldown when the 5th pixel is placed
                     }
                 }
             }
@@ -218,7 +221,7 @@
 
         // Function to update countdown display
         function updateCountdownDisplay(timeLeft) {
-            countdownDisplay.textContent = Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')};
+            countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
         }
 
         // Function to handle mouse click events on the canvas
@@ -232,17 +235,17 @@
 
         // Function to handle access code submission
         submitCodeButton.addEventListener('click', () => {
-            const code = userInput.value;
+            const code = userInput.value.trim(); // Trim whitespace
 
             // Check if the entered code is correct
             if (code === "Itsameamario1") {
                 overlay.style.display = 'none'; // Unlock the canvas
-                isCanvasUnlocked = true; // Set the flag to true
-                wipeCanvasButton.style.display = 'block'; // Show the wipe button
+                isCanvasUnlocked = true; // Set the flag to unlock the canvas
                 userInput.value = ''; // Clear the input field
-                loadCanvasState(); // Load previous canvas state
+                wipeCanvasButton.style.display = 'block'; // Show the wipe button
+                restoreCooldown(); // Restore cooldown if applicable
             } else {
-                alert('Incorrect access code. Please try again.');
+                alert("Incorrect access code. Please try again.");
             }
         });
 
@@ -250,41 +253,43 @@
         wipeCanvasButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to wipe the canvas? This action cannot be undone.")) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                placedPixels.length = 0; // Clear the array
-                cooldown = false; // Reset cooldown
-                countdownDisplay.textContent = 'Cooldown: 0:00'; // Reset countdown display
+                placedPixels.length = 0; // Clear placed pixels
                 pixelsPlaced = 0; // Reset pixel count
-                localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
             }
         });
 
-        // Save the canvas state to local storage
+        // Function to save the canvas state in local storage
         function saveCanvasState() {
-            const canvasData = canvas.toDataURL();
-            localStorage.setItem('canvasData', canvasData);
+            localStorage.setItem('canvasState', canvas.toDataURL());
         }
 
-        // Load the canvas state from local storage
-        function loadCanvasState() {
-            const canvasData = localStorage.getItem('canvasData');
-            if (canvasData) {
+        // Function to restore canvas state from local storage
+        function restoreCanvasState() {
+            const savedState = localStorage.getItem('canvasState');
+            if (savedState) {
                 const img = new Image();
-                img.src = canvasData;
                 img.onload = () => {
                     ctx.drawImage(img, 0, 0);
                 };
+                img.src = savedState;
             }
         }
 
-        // Check for an existing cooldown on page load
-        window.onload = () => {
+        // Function to restore cooldown
+        function restoreCooldown() {
             const cooldownEnd = localStorage.getItem('cooldownEnd');
             if (cooldownEnd) {
-                const timeLeft = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
-                if (timeLeft > 0) {
-                    startCooldown(timeLeft);
+                const remainingTime = Math.max(0, Math.floor((cooldownEnd - new Date().getTime()) / 1000));
+                if (remainingTime > 0) {
+                    startCooldown(remainingTime);
                 }
             }
+        }
+
+        // Restore the canvas state and cooldown on page load
+        window.onload = () => {
+            restoreCanvasState();
+            restoreCooldown();
         };
     </script>
 </body>
