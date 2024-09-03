@@ -54,13 +54,6 @@
             align-items: center;
         }
 
-        .color-box {
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            border: 2px solid #555;
-        }
-
         #accessSection {
             margin-top: 20px;
             display: flex;
@@ -122,7 +115,6 @@
     
     <div id="colorOptions">
         <input type="color" id="colorPicker" value="#000000">
-        <div id="currentColor" class="color-box" style="background-color: #000000;"></div>
         <div id="countdown" style="color: #ffcc00; margin-left: 10px;">Cooldown: 0:00</div>
     </div>
 
@@ -151,7 +143,6 @@
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('overlay');
         const colorPicker = document.getElementById('colorPicker');
-        const currentColorBox = document.getElementById('currentColor');
         const countdownDisplay = document.getElementById('countdown');
         const submitCodeButton = document.getElementById('submitCode');
         const userInput = document.getElementById('userInput');
@@ -173,7 +164,6 @@
         // Update the current color display
         colorPicker.addEventListener('input', (e) => {
             currentColor = e.target.value;
-            currentColorBox.style.backgroundColor = currentColor;
         });
 
         // Function to place a pixel on the canvas
@@ -191,37 +181,29 @@
                     placedPixels.push(pixelKey);
                     pixelsPlaced++;
 
-                    if (pixelsPlaced === 5) {
-                        startCooldown(); // Start cooldown when the 5th pixel is placed
-                    }
+                    startCooldown(); // Start cooldown immediately after placing a pixel
                 }
             }
         }
 
         // Function to start the cooldown
-        function startCooldown(timeLeft = cooldownTime) {
+        function startCooldown() {
             cooldown = true;
-            const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
-            localStorage.setItem('cooldownEnd', cooldownEnd);
-            updateCountdownDisplay(timeLeft);
+            let timeLeft = cooldownTime;
+            countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
             countdownTimer = setInterval(() => {
                 timeLeft--;
-                updateCountdownDisplay(timeLeft);
+                countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
                 if (timeLeft <= 0) {
                     clearInterval(countdownTimer);
                     cooldown = false;
                     pixelsPlaced = 0; // Reset the pixel count
-                    countdownDisplay.textContent = 'Cooldown: 0:00';
+                    countdownDisplay.textContent = `Cooldown: 0:00`;
                     localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
                 }
             }, 1000);
-        }
-
-        // Function to update countdown display
-        function updateCountdownDisplay(timeLeft) {
-            countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
         }
 
         // Function to handle mouse click events on the canvas
@@ -251,44 +233,42 @@
 
         // Function to wipe the canvas
         wipeCanvasButton.addEventListener('click', () => {
-            if (confirm("Are you sure you want to wipe the canvas? This action cannot be undone.")) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                placedPixels.length = 0; // Clear the placed pixels array
-                localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
-            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            placedPixels.length = 0; // Clear placed pixels
+            alert('Canvas wiped! You can start placing pixels again.');
         });
 
-        // Load the saved canvas state from local storage
-        function loadCanvasState() {
-            const savedState = localStorage.getItem('canvasState');
-            if (savedState) {
-                const pixels = JSON.parse(savedState);
-                pixels.forEach(pixel => {
-                    const [x, y, color] = pixel;
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x, y, pixelSize, pixelSize);
-                    placedPixels.push(`${x},${y}`);
-                });
-            }
-
-            // Load cooldown state
-            const cooldownEnd = localStorage.getItem('cooldownEnd');
-            if (cooldownEnd) {
-                const timeLeft = Math.max(Math.round((cooldownEnd - new Date().getTime()) / 1000), 0);
-                if (timeLeft > 0) {
-                    startCooldown(timeLeft);
-                }
-            }
-        }
-
-        // Save the current state of the canvas to local storage
+        // Function to save the canvas state in local storage
         function saveCanvasState() {
-            const canvasState = placedPixels.map(pixelKey => {
-                const [x, y] = pixelKey.split(',').map(Number);
-                return [x, y, ctx.getImageData(x, y, pixelSize, pixelSize).data]; // Get pixel color
-            });
-            localStorage.setItem('canvasState', JSON.stringify(canvasState));
+            const canvasData = canvas.toDataURL();
+            localStorage.setItem('canvasData', canvasData);
         }
+
+        // Function to load the canvas state from local storage
+        function loadCanvasState() {
+            const canvasData = localStorage.getItem('canvasData');
+            if (canvasData) {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = canvasData;
+            }
+        }
+
+        // Middle mouse button click to pick color
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 1) { // Middle mouse button
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left));
+                const y = Math.floor((e.clientY - rect.top));
+                const gridX = Math.floor(x / pixelSize) * pixelSize;
+                const gridY = Math.floor(y / pixelSize) * pixelSize;
+                const pixelData = ctx.getImageData(gridX, gridY, pixelSize, pixelSize).data;
+                const pickedColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+                colorPicker.value = pickedColor; // Set the picked color to the color picker
+            }
+        });
     </script>
 </body>
 </html>
