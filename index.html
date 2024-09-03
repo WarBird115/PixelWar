@@ -54,6 +54,14 @@
             align-items: center;
         }
 
+        #colorDisplay {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #555;
+            background-color: #000; /* Default color */
+            margin-right: 10px;
+        }
+
         #accessSection {
             margin-top: 20px;
             display: flex;
@@ -77,11 +85,6 @@
             color: #ffffff;
             cursor: pointer;
             display: none; /* Initially hidden */
-        }
-
-        #countdownDisplay {
-            margin-top: 10px;
-            color: #ffcc00; /* Countdown text color */
         }
 
         #welcomeText {
@@ -109,6 +112,11 @@
         #welcomeText li {
             margin-bottom: 5px;
         }
+
+        #countdownDisplay {
+            margin-top: 10px;
+            color: #ffcc00; /* Countdown text color */
+        }
     </style>
 </head>
 <body>
@@ -119,6 +127,7 @@
     </div>
 
     <div id="colorOptions">
+        <div id="colorDisplay"></div>
         <label for="colorPicker">Choose Color:</label>
         <input type="color" id="colorPicker" value="#000000">
     </div>
@@ -152,6 +161,7 @@
         const userInput = document.getElementById('userInput');
         const wipeCanvasButton = document.getElementById('wipeCanvasButton');
         const colorPicker = document.getElementById('colorPicker');
+        const colorDisplay = document.getElementById('colorDisplay');
         const countdownDisplay = document.getElementById('countdownDisplay');
 
         let isCanvasUnlocked = false;
@@ -275,17 +285,12 @@
 
         // Event listener to change color
         colorPicker.addEventListener('input', (e) => {
-            currentColor = e.target.value; // Update the current color
+            currentColor = e.target.value;
+            colorDisplay.style.backgroundColor = currentColor; // Update color display
         });
 
-        // Initialize countdown display on page load
-        const savedCooldownEnd = localStorage.getItem('cooldownEnd');
-        if (savedCooldownEnd) {
-            const timeLeft = Math.ceil((new Date().getTime() - savedCooldownEnd) / 1000);
-            if (timeLeft > 0) {
-                startCooldown(timeLeft);
-            }
-        }
+        // Initialize color display
+        colorDisplay.style.backgroundColor = currentColor;
     </script>
 </body>
 </html>
