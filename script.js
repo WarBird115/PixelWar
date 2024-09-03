@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const placedPixels = [];
     const pixelSize = 10; // Adjusted pixel size
 
+    // WebSocket connection
+    const socket = new WebSocket('ws://localhost:3000');
+
     // Function to generate a random 5-digit code
     function generateRandomCode() {
         return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit code
@@ -102,6 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 saveCanvasState(); // Save the pixel placement to localStorage
 
+                // Send the new pixel to the server via WebSocket
+                socket.send(JSON.stringify({ type: 'placePixel', pixel: newPixel }));
+
                 pixelsPlaced++;
 
                 if (pixelsPlaced === 1) {
@@ -136,6 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCountdownDisplay(timeLeft) {
         countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60).toString().padStart(2, '0')}`;
     }
+
+    // Handle WebSocket events
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'newPixel') {
+            // Render a newly placed pixel from other users
+            const pixel = data.pixel;
+            ctx.fillStyle = pixel.color;
+            ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+            placedPixels.push(pixel); // Update local state
+        }
+    };
 
     // Add event listener for canvas click
     canvas.addEventListener('click', (e) => {
