@@ -54,13 +54,6 @@
             align-items: center;
         }
 
-        .color-box {
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            border: 2px solid #555;
-        }
-
         #accessSection {
             margin-top: 20px;
             display: flex;
@@ -84,6 +77,11 @@
             color: #ffffff;
             cursor: pointer;
             display: none; /* Initially hidden */
+        }
+
+        #countdown {
+            color: #ffcc00; /* Countdown text color */
+            margin-left: 10px;
         }
 
         #welcomeText {
@@ -122,8 +120,7 @@
     
     <div id="colorOptions">
         <input type="color" id="colorPicker" value="#000000">
-        <div id="currentColor" class="color-box" style="background-color: #000000;"></div>
-        <div id="countdown" style="color: #ffcc00; margin-left: 10px;">Cooldown: 0:00</div>
+        <div id="countdown">Cooldown: 0:00</div>
     </div>
 
     <div id="accessSection">
@@ -151,7 +148,6 @@
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('overlay');
         const colorPicker = document.getElementById('colorPicker');
-        const currentColorBox = document.getElementById('currentColor');
         const countdownDisplay = document.getElementById('countdown');
         const submitCodeButton = document.getElementById('submitCode');
         const userInput = document.getElementById('userInput');
@@ -166,20 +162,10 @@
         // Initialize pixel color
         let currentColor = colorPicker.value;
 
-        // Array to keep track of placed pixels
-        const placedPixels = [];
-        const pixelSize = 10; // Adjusted pixel size
-
-        // Update the current color display
-        colorPicker.addEventListener('input', (e) => {
-            currentColor = e.target.value;
-            currentColorBox.style.backgroundColor = currentColor;
-        });
-
         // Function to place a pixel on the canvas
         function placePixel(x, y) {
             if (isCanvasUnlocked && !cooldown) {
-                // Calculate grid position
+                const pixelSize = 10; // Adjusted pixel size
                 const gridX = Math.floor(x / pixelSize) * pixelSize;
                 const gridY = Math.floor(y / pixelSize) * pixelSize;
                 const pixelKey = `${gridX},${gridY}`;
@@ -223,6 +209,11 @@
         function updateCountdownDisplay(timeLeft) {
             countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
         }
+
+        // Event listener to change color
+        colorPicker.addEventListener('input', (e) => {
+            currentColor = e.target.value; // Update the current color
+        });
 
         // Function to handle mouse click events on the canvas
         canvas.addEventListener('click', (e) => {
