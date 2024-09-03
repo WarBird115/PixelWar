@@ -253,7 +253,7 @@
 
             // Function to update countdown display
             function updateCountdownDisplay(timeLeft) {
-                countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}`;
+                countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60).toString().padStart(2, '0')}`;
             }
 
             // Add event listener for canvas click
@@ -270,6 +270,9 @@
                 const accessCode = localStorage.getItem('randomAccessCode');
                 const adminPassword = "Itsameamario1"; // Set the admin password
 
+                console.log(`Access Code: ${accessCode}, User Input: ${userInput.value}, Admin Password: ${adminPassword}`); // Debugging log
+
+                // Check if the user input matches either the access code or the admin password
                 if (userInput.value === accessCode || userInput.value === adminPassword) {
                     overlay.style.display = 'none';
                     isCanvasUnlocked = true;
