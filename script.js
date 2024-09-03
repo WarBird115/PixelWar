@@ -30,18 +30,20 @@ colorPicker.addEventListener('input', (e) => {
 // Function to place a pixel on the canvas
 function placePixel(x, y) {
     if (isCanvasUnlocked && !cooldown) {
+        // Calculate grid position
         const gridX = Math.floor(x / pixelSize) * pixelSize;
         const gridY = Math.floor(y / pixelSize) * pixelSize;
         const pixelKey = `${gridX},${gridY}`;
 
+        // Check if the pixel position is already occupied
         if (!placedPixels.includes(pixelKey)) {
             ctx.fillStyle = currentColor;
-            ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
+            ctx.fillRect(gridX, gridY, pixelSize, pixelSize); // Set pixel size to pixelSize x pixelSize
             placedPixels.push(pixelKey);
             pixelsPlaced++;
 
-            if (pixelsPlaced === 5) {
-                startCooldown();
+            if (pixelsPlaced === 1) {
+                startCooldown(); // Start cooldown when the 5th pixel is placed
             }
         }
     }
@@ -61,9 +63,9 @@ function startCooldown(timeLeft = cooldownTime) {
         if (timeLeft <= 0) {
             clearInterval(countdownTimer);
             cooldown = false;
-            pixelsPlaced = 0;
+            pixelsPlaced = 0; // Reset the pixel count
             countdownDisplay.textContent = 'Cooldown: 0:00';
-            localStorage.removeItem('cooldownEnd');
+            localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
         }
     }, 1000);
 }
@@ -79,7 +81,7 @@ canvas.addEventListener('click', (e) => {
     const x = Math.floor((e.clientX - rect.left));
     const y = Math.floor((e.clientY - rect.top));
     placePixel(x, y);
-    saveCanvasState();
+    saveCanvasState(); // Save the canvas state after placing a pixel
 });
 
 // Function to handle access code submission
@@ -89,14 +91,13 @@ submitCodeButton.addEventListener('click', () => {
     // Check if the entered code is correct
     if (code === "Itsameamario1") {
         overlay.style.display = 'none'; // Unlock the canvas
-        isCanvasUnlocked = true;
+        isCanvasUnlocked = true; // Set the flag to true
         wipeCanvasButton.style.display = 'block'; // Show the wipe button
         userInput.value = ''; // Clear the input field
+        loadCanvasState(); // Load previous canvas state
     } else {
         alert('Incorrect access code. Please try again.');
     }
-
-    loadCanvasState(); // Load previous canvas state regardless of access code
 });
 
 // Function to wipe the canvas
@@ -115,7 +116,7 @@ function loadCanvasState() {
         const pixels = JSON.parse(savedState);
         pixels.forEach(pixel => {
             const [x, y, color] = pixel;
-            ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 255)`; // Ensure color is set properly
+            ctx.fillStyle = color;
             ctx.fillRect(x, y, pixelSize, pixelSize);
             placedPixels.push(`${x},${y}`);
         });
@@ -135,8 +136,7 @@ function loadCanvasState() {
 function saveCanvasState() {
     const canvasState = placedPixels.map(pixelKey => {
         const [x, y] = pixelKey.split(',').map(Number);
-        const colorData = ctx.getImageData(x, y, pixelSize, pixelSize).data; // Get pixel color
-        return [x, y, [colorData[0], colorData[1], colorData[2]]]; // Store color as an array
+        return [x, y, ctx.getImageData(x, y, pixelSize, pixelSize).data]; // Get pixel color
     });
     localStorage.setItem('canvasState', JSON.stringify(canvasState));
 }
