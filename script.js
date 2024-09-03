@@ -122,12 +122,10 @@ submitCodeButton.addEventListener('click', () => {
         isCanvasUnlocked = true; // Set the flag to true
         wipeCanvasButton.style.display = 'block'; // Show the wipe button
         userInput.value = ''; // Clear the input field
+        loadCanvasState(); // Load previous canvas state
     } else {
         alert('Incorrect access code. Please try again.');
     }
-
-    // Always load the canvas state regardless of access code
-    loadCanvasState(); // Load previous canvas state
 });
 
 // Function to wipe the canvas
