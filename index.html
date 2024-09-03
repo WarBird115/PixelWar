@@ -104,6 +104,14 @@
         #welcomeText li {
             margin-bottom: 5px;
         }
+
+        /* Add styles for the color selection box */
+        #colorPicker {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #555;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -111,6 +119,11 @@
     <div id="canvasContainer">
         <canvas id="pixelCanvas" width="500" height="500"></canvas>
         <div class="overlay" id="overlay">Enter Access Code to Unlock Canvas</div>
+    </div>
+
+    <div id="colorOptions">
+        <label for="colorPicker">Select Color:</label>
+        <input type="color" id="colorPicker" value="#000000">
     </div>
 
     <div id="accessSection">
@@ -140,6 +153,7 @@
         const submitCodeButton = document.getElementById('submitCode');
         const userInput = document.getElementById('userInput');
         const wipeCanvasButton = document.getElementById('wipeCanvasButton');
+        const colorPicker = document.getElementById('colorPicker');
 
         let isCanvasUnlocked = false;
         let cooldown = false;
@@ -161,7 +175,7 @@
 
                 // Check if the pixel position is already occupied
                 if (!placedPixels.includes(pixelKey)) {
-                    ctx.fillStyle = currentColor;
+                    ctx.fillStyle = colorPicker.value; // Use selected color from color picker
                     ctx.fillRect(gridX, gridY, pixelSize, pixelSize); // Set pixel size to pixelSize x pixelSize
                     placedPixels.push(pixelKey);
                     pixelsPlaced++;
@@ -244,18 +258,18 @@
             // Load cooldown state
             const cooldownEnd = localStorage.getItem('cooldownEnd');
             if (cooldownEnd) {
-                const timeLeft = Math.max(Math.round((cooldownEnd - new Date().getTime()) / 1000), 0);
+                const timeLeft = Math.ceil((cooldownEnd - new Date().getTime()) / 1000);
                 if (timeLeft > 0) {
                     startCooldown(timeLeft);
                 }
             }
         }
 
-        // Save the current state of the canvas to local storage
+        // Save the current canvas state to local storage
         function saveCanvasState() {
             const canvasState = placedPixels.map(pixelKey => {
                 const [x, y] = pixelKey.split(',').map(Number);
-                return [x, y, ctx.getImageData(x, y, pixelSize, pixelSize).data.slice(0, 4)];
+                return [x, y, colorPicker.value]; // Store color as well
             });
 
             localStorage.setItem('canvasState', JSON.stringify(canvasState));
@@ -269,22 +283,15 @@
             countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         }
 
-        let currentColor = "#000000"; // Default color
-
-        // Event listener to change color (you can add this back if you want a color picker)
-        const colorOptions = ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00']; // Example colors
-        colorOptions.forEach(color => {
-            const colorButton = document.createElement('button');
-            colorButton.style.backgroundColor = color;
-            colorButton.style.width = '30px';
-            colorButton.style.height = '30px';
-            colorButton.style.border = 'none';
-            colorButton.style.cursor = 'pointer';
-            colorButton.onclick = () => {
-                currentColor = color;
-            };
-            document.getElementById('colorOptions').appendChild(colorButton);
+        // Event listener to update current color from color picker
+        colorPicker.addEventListener('input', (e) => {
+            const selectedColor = e.target.value;
+            // Optionally, you can do something with the selected color
         });
+
+        // Load canvas state when the page is loaded
+        window.onload = loadCanvasState;
+
     </script>
 </body>
 </html>
