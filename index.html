@@ -54,12 +54,11 @@
             align-items: center;
         }
 
-        #colorDisplay {
-            width: 50px;
-            height: 50px;
-            border: 1px solid #555;
-            background-color: #000; /* Default color */
-            margin-right: 10px;
+        .color-box {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            border: 2px solid #555;
         }
 
         #accessSection {
@@ -112,11 +111,6 @@
         #welcomeText li {
             margin-bottom: 5px;
         }
-
-        #countdownDisplay {
-            margin-top: 10px;
-            color: #ffcc00; /* Countdown text color */
-        }
     </style>
 </head>
 <body>
@@ -125,11 +119,11 @@
         <canvas id="pixelCanvas" width="500" height="500"></canvas>
         <div class="overlay" id="overlay">Enter Access Code to Unlock Canvas</div>
     </div>
-
+    
     <div id="colorOptions">
-        <div id="colorDisplay"></div>
-        <label for="colorPicker">Choose Color:</label>
         <input type="color" id="colorPicker" value="#000000">
+        <div id="currentColor" class="color-box" style="background-color: #000000;"></div>
+        <div id="countdown" style="color: #ffcc00; margin-left: 10px;">Cooldown: 0:00</div>
     </div>
 
     <div id="accessSection">
@@ -139,7 +133,6 @@
     </div>
 
     <button id="wipeCanvasButton">Wipe Canvas</button>
-    <div id="countdownDisplay">Cooldown: 0:00</div>
 
     <div id="welcomeText">
         <h2>Welcome to Pixel Wars!</h2>
@@ -157,12 +150,12 @@
         const canvas = document.getElementById('pixelCanvas');
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('overlay');
+        const colorPicker = document.getElementById('colorPicker');
+        const currentColorBox = document.getElementById('currentColor');
+        const countdownDisplay = document.getElementById('countdown');
         const submitCodeButton = document.getElementById('submitCode');
         const userInput = document.getElementById('userInput');
         const wipeCanvasButton = document.getElementById('wipeCanvasButton');
-        const colorPicker = document.getElementById('colorPicker');
-        const colorDisplay = document.getElementById('colorDisplay');
-        const countdownDisplay = document.getElementById('countdownDisplay');
 
         let isCanvasUnlocked = false;
         let cooldown = false;
@@ -170,9 +163,18 @@
         let cooldownTime = 300; // 300 seconds (5 minutes)
         let countdownTimer;
 
+        // Initialize pixel color
+        let currentColor = colorPicker.value;
+
         // Array to keep track of placed pixels
         const placedPixels = [];
         const pixelSize = 10; // Adjusted pixel size
+
+        // Update the current color display
+        colorPicker.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            currentColorBox.style.backgroundColor = currentColor;
+        });
 
         // Function to place a pixel on the canvas
         function placePixel(x, y) {
@@ -217,6 +219,11 @@
             }, 1000);
         }
 
+        // Function to update countdown display
+        function updateCountdownDisplay(timeLeft) {
+            countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+        }
+
         // Function to handle mouse click events on the canvas
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
@@ -228,17 +235,17 @@
 
         // Function to handle access code submission
         submitCodeButton.addEventListener('click', () => {
-            const code = userInput.value;
+            const code = userInput.value.trim(); // Trim whitespace
 
             // Check if the entered code is correct
             if (code === "Itsameamario1") {
                 overlay.style.display = 'none'; // Unlock the canvas
-                isCanvasUnlocked = true; // Set the flag to true
-                wipeCanvasButton.style.display = 'block'; // Show the wipe button
+                isCanvasUnlocked = true; // Set the flag to unlock the canvas
                 userInput.value = ''; // Clear the input field
-                loadCanvasState(); // Load previous canvas state
+                wipeCanvasButton.style.display = 'block'; // Show the wipe button
+                restoreCooldown(); // Restore cooldown if applicable
             } else {
-                alert('Incorrect access code. Please try again.');
+                alert("Incorrect access code. Please try again.");
             }
         });
 
@@ -246,51 +253,44 @@
         wipeCanvasButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to wipe the canvas? This action cannot be undone.")) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                placedPixels.length = 0; // Clear the placed pixels array
-                localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
+                placedPixels.length = 0; // Clear placed pixels
+                pixelsPlaced = 0; // Reset pixel count
             }
         });
 
-        // Load the saved canvas state from local storage
-        function loadCanvasState() {
+        // Function to save the canvas state in local storage
+        function saveCanvasState() {
+            localStorage.setItem('canvasState', canvas.toDataURL());
+        }
+
+        // Function to restore canvas state from local storage
+        function restoreCanvasState() {
             const savedState = localStorage.getItem('canvasState');
             if (savedState) {
-                const pixels = JSON.parse(savedState);
-                pixels.forEach(pixel => {
-                    const [x, y] = pixel.split(',').map(Number);
-                    ctx.fillStyle = currentColor;
-                    ctx.fillRect(x, y, pixelSize, pixelSize); // Draw each saved pixel
-                    placedPixels.push(pixel);
-                });
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = savedState;
             }
         }
 
-        // Save the canvas state to local storage
-        function saveCanvasState() {
-            const canvasState = placedPixels.map(pixel => {
-                const [x, y] = pixel.split(',').map(Number);
-                return `${x},${y}`;
-            });
-            localStorage.setItem('canvasState', JSON.stringify(canvasState));
+        // Function to restore cooldown
+        function restoreCooldown() {
+            const cooldownEnd = localStorage.getItem('cooldownEnd');
+            if (cooldownEnd) {
+                const remainingTime = Math.max(0, Math.floor((cooldownEnd - new Date().getTime()) / 1000));
+                if (remainingTime > 0) {
+                    startCooldown(remainingTime);
+                }
+            }
         }
 
-        // Update the countdown display
-        function updateCountdownDisplay(timeLeft) {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        }
-
-        let currentColor = "#000000"; // Default color
-
-        // Event listener to change color
-        colorPicker.addEventListener('input', (e) => {
-            currentColor = e.target.value;
-            colorDisplay.style.backgroundColor = currentColor; // Update color display
-        });
-
-        // Initialize color display
-        colorDisplay.style.backgroundColor = currentColor;
+        // Restore the canvas state and cooldown on page load
+        window.onload = () => {
+            restoreCanvasState();
+            restoreCooldown();
+        };
     </script>
 </body>
 </html>
