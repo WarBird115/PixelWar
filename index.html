@@ -162,10 +162,59 @@
         // Initialize pixel color
         let currentColor = colorPicker.value;
 
+        // Array to keep track of placed pixels
+        const placedPixels = [];
+        const pixelSize = 10; // Adjusted pixel size
+
+        // Function to generate a random 5-digit code
+        function generateRandomCode() {
+            return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit code
+        }
+
+        // Function to check if it's Sunday after 17:00
+        function isSundayAfterFive() {
+            const now = new Date();
+            return now.getDay() === 0 && now.getHours() >= 17; // Sunday = 0
+        }
+
+        // Function to load or generate the access code
+        function loadOrGenerateAccessCode() {
+            const lastGeneratedCode = localStorage.getItem('randomAccessCode');
+            const lastGeneratedTime = localStorage.getItem('lastGeneratedTime');
+            const now = new Date();
+
+            if (lastGeneratedCode && lastGeneratedTime) {
+                const lastTime = new Date(parseInt(lastGeneratedTime));
+
+                // If it's Sunday after 17:00 and the last code was generated earlier, generate a new code
+                if (isSundayAfterFive() && now > lastTime) {
+                    const newCode = generateRandomCode();
+                    localStorage.setItem('randomAccessCode', newCode);
+                    localStorage.setItem('lastGeneratedTime', Date.now());
+                    accessCodeDisplay.textContent = newCode;
+                } else {
+                    accessCodeDisplay.textContent = lastGeneratedCode; // Use the last generated code
+                }
+            } else {
+                // Generate and store a new code if none exists
+                const newCode = generateRandomCode();
+                localStorage.setItem('randomAccessCode', newCode);
+                localStorage.setItem('lastGeneratedTime', Date.now());
+                accessCodeDisplay.textContent = newCode; // Display the new code
+            }
+        }
+
+        // Call this function on page load
+        loadOrGenerateAccessCode();
+
+        // Update the current color display
+        colorPicker.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+        });
+
         // Function to place a pixel on the canvas
         function placePixel(x, y) {
             if (isCanvasUnlocked && !cooldown) {
-                const pixelSize = 10; // Adjusted pixel size
                 const gridX = Math.floor(x / pixelSize) * pixelSize;
                 const gridY = Math.floor(y / pixelSize) * pixelSize;
                 const pixelKey = `${gridX},${gridY}`;
@@ -173,12 +222,12 @@
                 // Check if the pixel position is already occupied
                 if (!placedPixels.includes(pixelKey)) {
                     ctx.fillStyle = currentColor;
-                    ctx.fillRect(gridX, gridY, pixelSize, pixelSize); // Set pixel size to pixelSize x pixelSize
+                    ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
                     placedPixels.push(pixelKey);
                     pixelsPlaced++;
 
-                    if (pixelsPlaced === 5) {
-                        startCooldown(); // Start cooldown when the 5th pixel is placed
+                    if (pixelsPlaced === 1) {
+                        startCooldown(); // Start cooldown when the 1st pixel is placed
                     }
                 }
             }
@@ -207,81 +256,40 @@
 
         // Function to update countdown display
         function updateCountdownDisplay(timeLeft) {
-            countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+            countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}`;
         }
 
-        // Event listener to change color
-        colorPicker.addEventListener('input', (e) => {
-            currentColor = e.target.value; // Update the current color
-        });
-
-        // Function to handle mouse click events on the canvas
+        // Add event listener for canvas click
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left));
-            const y = Math.floor((e.clientY - rect.top));
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
             placePixel(x, y);
-            saveCanvasState(); // Save the canvas state after placing a pixel
         });
 
-        // Function to handle access code submission
+        // Add event listener for submitting access code
         submitCodeButton.addEventListener('click', () => {
-            const code = userInput.value.trim(); // Trim whitespace
+            const accessCode = localStorage.getItem('randomAccessCode');
 
-            // Check if the entered code is correct
-            if (code === "Itsameamario1") {
-                overlay.style.display = 'none'; // Unlock the canvas
-                isCanvasUnlocked = true; // Set the flag to unlock the canvas
+            if (userInput.value === accessCode) {
+                overlay.style.display = 'none';
+                isCanvasUnlocked = true;
                 userInput.value = ''; // Clear the input field
-                wipeCanvasButton.style.display = 'block'; // Show the wipe button
-                restoreCooldown(); // Restore cooldown if applicable
+                wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
             } else {
-                alert("Incorrect access code. Please try again.");
+                alert('Incorrect access code. Please try again.');
             }
         });
 
-        // Function to wipe the canvas
+        // Add event listener for the wipe canvas button
         wipeCanvasButton.addEventListener('click', () => {
-            if (confirm("Are you sure you want to wipe the canvas? This action cannot be undone.")) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (confirm('Are you sure you want to wipe the canvas?')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
                 placedPixels.length = 0; // Clear placed pixels
-                pixelsPlaced = 0; // Reset pixel count
+                alert('Canvas has been wiped!');
             }
         });
-
-        // Function to save the canvas state in local storage
-        function saveCanvasState() {
-            localStorage.setItem('canvasState', canvas.toDataURL());
-        }
-
-        // Function to restore canvas state from local storage
-        function restoreCanvasState() {
-            const savedState = localStorage.getItem('canvasState');
-            if (savedState) {
-                const img = new Image();
-                img.onload = () => {
-                    ctx.drawImage(img, 0, 0);
-                };
-                img.src = savedState;
-            }
-        }
-
-        // Function to restore cooldown
-        function restoreCooldown() {
-            const cooldownEnd = localStorage.getItem('cooldownEnd');
-            if (cooldownEnd) {
-                const remainingTime = Math.max(0, Math.floor((cooldownEnd - new Date().getTime()) / 1000));
-                if (remainingTime > 0) {
-                    startCooldown(remainingTime);
-                }
-            }
-        }
-
-        // Restore the canvas state and cooldown on page load
-        window.onload = () => {
-            restoreCanvasState();
-            restoreCooldown();
-        };
     </script>
 </body>
 </html>

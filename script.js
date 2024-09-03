@@ -43,7 +43,7 @@ function placePixel(x, y) {
             pixelsPlaced++;
 
             if (pixelsPlaced === 1) {
-                startCooldown(); // Start cooldown when the 5th pixel is placed
+                startCooldown(); // Start cooldown when the 1th pixel is placed
             }
         }
     }
