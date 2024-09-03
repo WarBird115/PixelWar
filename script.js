@@ -155,6 +155,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // On page load, check if there's an active cooldown
+    const cooldownEnd = localStorage.getItem('cooldownEnd');
+    if (cooldownEnd) {
+        const now = new Date().getTime();
+        const timeLeft = Math.floor((cooldownEnd - now) / 1000);
+
+        if (timeLeft > 0) {
+            startCooldown(timeLeft); // Resume cooldown
+        } else {
+            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
+        }
+    }
+
     // Add event listener for canvas click
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
