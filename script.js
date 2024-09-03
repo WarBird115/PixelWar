@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to start the cooldown
     function startCooldown(timeLeft = cooldownTime) {
         cooldown = true;
-        const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
+        const cooldownEnd = Date.now() + timeLeft * 1000;
         localStorage.setItem('cooldownEnd', cooldownEnd);
         updateCountdownDisplay(timeLeft);
 
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // On page load, check if there's an active cooldown
     const cooldownEnd = localStorage.getItem('cooldownEnd');
     if (cooldownEnd) {
-        const now = new Date().getTime();
+        const now = Date.now();
         const timeLeft = Math.floor((cooldownEnd - now) / 1000);
 
         if (timeLeft > 0) {
