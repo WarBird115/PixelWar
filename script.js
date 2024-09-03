@@ -84,40 +84,12 @@ canvas.addEventListener('click', (e) => {
     saveCanvasState(); // Save the canvas state after placing a pixel
 });
 
-// Function to generate a random 5-digit code
-function generateRandomCode() {
-    return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit number
-}
-
-// Function to check if today is Sunday and update the password if needed
-function updatePasswordIfSunday() {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // Sunday is 0
-    const lastGeneratedDate = localStorage.getItem('lastGeneratedDate');
-
-    if (dayOfWeek === 0) { // Check if today is Sunday
-        if (lastGeneratedDate !== today.toDateString()) { // Check if password has already been generated today
-            const newPassword = generateRandomCode(); // Generate new random password
-            localStorage.setItem('accessPassword', newPassword); // Save it in local storage
-            localStorage.setItem('lastGeneratedDate', today.toDateString()); // Save today's date
-            console.log("New password generated:", newPassword); // For debugging
-        }
-    }
-}
-
-// Call the updatePasswordIfSunday function on page load
-updatePasswordIfSunday();
-
-// Use the generated password for validation
-const accessPassword = localStorage.getItem('accessPassword') || "defaultPassword"; // Fallback to a default password
-const adminPassword = "Itsameamario1"; // Admin password
-
 // Function to handle access code submission
 submitCodeButton.addEventListener('click', () => {
     const code = userInput.value;
 
     // Check if the entered code is correct
-    if (code === accessPassword || code === adminPassword) {
+    if (code === "Itsameamario1") {
         overlay.style.display = 'none'; // Unlock the canvas
         isCanvasUnlocked = true; // Set the flag to true
         wipeCanvasButton.style.display = 'block'; // Show the wipe button
