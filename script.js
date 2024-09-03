@@ -7,7 +7,6 @@ const countdownDisplay = document.getElementById('countdown');
 const submitCodeButton = document.getElementById('submitCode');
 const userInput = document.getElementById('userInput');
 const wipeCanvasButton = document.getElementById('wipeCanvasButton');
-const accessCodeDisplay = document.getElementById('accessCodeDisplay'); // Ensure this element exists in your HTML
 
 let isCanvasUnlocked = false;
 let cooldown = false;
@@ -28,33 +27,23 @@ colorPicker.addEventListener('input', (e) => {
     currentColorBox.style.backgroundColor = currentColor;
 });
 
-// Admin password
-const adminPassword = "admin123"; // Set your admin password here
-
-// Function to generate a random 5-digit code
-function generateRandomCode() {
-    return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit number
-}
-
-let currentGeneratedCode = generateRandomCode(); // Generate initial code
-accessCodeDisplay.textContent = `Access Code: ${currentGeneratedCode}`; // Display the code
-console.log("Current Generated Code:", currentGeneratedCode); // Debugging line
-
 // Function to place a pixel on the canvas
 function placePixel(x, y) {
     if (isCanvasUnlocked && !cooldown) {
+        // Calculate grid position
         const gridX = Math.floor(x / pixelSize) * pixelSize;
         const gridY = Math.floor(y / pixelSize) * pixelSize;
         const pixelKey = `${gridX},${gridY}`;
 
+        // Check if the pixel position is already occupied
         if (!placedPixels.includes(pixelKey)) {
             ctx.fillStyle = currentColor;
-            ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
+            ctx.fillRect(gridX, gridY, pixelSize, pixelSize); // Set pixel size to pixelSize x pixelSize
             placedPixels.push(pixelKey);
             pixelsPlaced++;
 
-            if (pixelsPlaced === 1) {
-                startCooldown();
+            if (pixelsPlaced === 5) {
+                startCooldown(); // Start cooldown when the 5th pixel is placed
             }
         }
     }
@@ -92,32 +81,26 @@ canvas.addEventListener('click', (e) => {
     const x = Math.floor((e.clientX - rect.left));
     const y = Math.floor((e.clientY - rect.top));
     placePixel(x, y);
-    saveCanvasState();
+    saveCanvasState(); // Save the canvas state after placing a pixel
 });
 
 // Function to handle access code submission
 submitCodeButton.addEventListener('click', () => {
     const code = userInput.value;
-    console.log("Submitted Code:", code); // Debugging line
 
-    // Check if the entered code is the admin password or the generated code
-    if (code === adminPassword) {
-        unlockCanvas();
-    } else if (code === currentGeneratedCode) {
-        unlockCanvas();
+    // Check if the entered code is correct
+    if (code === "Itsameamario1") {
+        overlay.style.display = 'none'; // Unlock the canvas
+        isCanvasUnlocked = true; // Set the flag to true
+        wipeCanvasButton.style.display = 'block'; // Show the wipe button
+        userInput.value = ''; // Clear the input field
     } else {
         alert('Incorrect access code. Please try again.');
     }
-});
 
-// Function to unlock the canvas
-function unlockCanvas() {
-    overlay.style.display = 'none'; // Unlock the canvas
-    isCanvasUnlocked = true; // Set the flag to true
-    wipeCanvasButton.style.display = 'block'; // Show the wipe button
-    userInput.value = ''; // Clear the input field
+    // Always load the canvas state regardless of access code
     loadCanvasState(); // Load previous canvas state
-}
+});
 
 // Function to wipe the canvas
 wipeCanvasButton.addEventListener('click', () => {
@@ -125,9 +108,6 @@ wipeCanvasButton.addEventListener('click', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         placedPixels.length = 0; // Clear the placed pixels array
         localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
-        currentGeneratedCode = generateRandomCode(); // Generate a new random code
-        accessCodeDisplay.textContent = `Access Code: ${currentGeneratedCode}`; // Display the new code
-        console.log("New Generated Code:", currentGeneratedCode); // Debugging line
     }
 });
 
