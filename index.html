@@ -153,11 +153,6 @@
             const submitCodeButton = document.getElementById('submitCode');
             const userInput = document.getElementById('userInput');
             const wipeCanvasButton = document.getElementById('wipeCanvasButton');
-            const accessCodeDisplay = document.createElement('div'); // Create access code display
-            document.body.appendChild(accessCodeDisplay); // Append it to the body
-
-            accessCodeDisplay.id = 'accessCodeDisplay'; // Set the ID for the access code display
-            accessCodeDisplay.textContent = 'Access Code: '; // Initial text
 
             let isCanvasUnlocked = false;
             let cooldown = false;
@@ -197,16 +192,12 @@
                         const newCode = generateRandomCode();
                         localStorage.setItem('randomAccessCode', newCode);
                         localStorage.setItem('lastGeneratedTime', Date.now());
-                        accessCodeDisplay.textContent = `Access Code: ${newCode}`;
-                    } else {
-                        accessCodeDisplay.textContent = `Access Code: ${lastGeneratedCode}`; // Use the last generated code
                     }
                 } else {
                     // Generate and store a new code if none exists
                     const newCode = generateRandomCode();
                     localStorage.setItem('randomAccessCode', newCode);
                     localStorage.setItem('lastGeneratedTime', Date.now());
-                    accessCodeDisplay.textContent = `Access Code: ${newCode}`; // Display the new code
                 }
             }
 
@@ -277,14 +268,15 @@
             // Add event listener for submitting access code
             submitCodeButton.addEventListener('click', () => {
                 const accessCode = localStorage.getItem('randomAccessCode');
+                const adminPassword = "Itsameamario1"; // Set the admin password
 
-                if (userInput.value === accessCode) {
+                if (userInput.value === accessCode || userInput.value === adminPassword) {
                     overlay.style.display = 'none';
                     isCanvasUnlocked = true;
                     userInput.value = ''; // Clear the input field
                     wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
                 } else {
-                    alert('Incorrect access code. Please try again.');
+                    alert('Incorrect access code or admin password. Please try again.');
                 }
             });
 
