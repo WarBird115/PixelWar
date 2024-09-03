@@ -97,7 +97,9 @@ submitCodeButton.addEventListener('click', () => {
     } else {
         alert('Incorrect access code. Please try again.');
     }
-    loadCanvasState(); // Load previous canvas state regardless of the access code
+
+    // Always load the canvas state regardless of access code
+    loadCanvasState(); // Load previous canvas state
 });
 
 // Function to wipe the canvas
@@ -136,12 +138,7 @@ function loadCanvasState() {
 function saveCanvasState() {
     const canvasState = placedPixels.map(pixelKey => {
         const [x, y] = pixelKey.split(',').map(Number);
-        const colorData = ctx.getImageData(x, y, pixelSize, pixelSize).data;
-        const color = `rgba(${colorData[0]}, ${colorData[1]}, ${colorData[2]}, ${colorData[3] / 255})`; // Convert to RGBA
-        return [x, y, color]; // Get pixel color in a usable format
+        return [x, y, ctx.getImageData(x, y, pixelSize, pixelSize).data]; // Get pixel color
     });
     localStorage.setItem('canvasState', JSON.stringify(canvasState));
 }
-
-// Load canvas state on initial page load
-window.onload = loadCanvasState;
