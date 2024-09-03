@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCanvasUnlocked = false;
     let cooldown = false;
     let pixelsPlaced = 0;
-    let cooldownTime = 300; // 300 seconds (5 minutes)
+    const cooldownTime = 300; // 300 seconds (5 minutes)
     let countdownTimer;
 
     // Initialize pixel color
@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Array to keep track of placed pixels
     const placedPixels = [];
     const pixelSize = 10; // Adjusted pixel size
-
-    // WebSocket connection
-    const socket = new WebSocket('ws://localhost:3000');
 
     // Function to generate a random 5-digit code
     function generateRandomCode() {
@@ -105,9 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 saveCanvasState(); // Save the pixel placement to localStorage
 
-                // Send the new pixel to the server via WebSocket
-                socket.send(JSON.stringify({ type: 'placePixel', pixel: newPixel }));
-
                 pixelsPlaced++;
 
                 if (pixelsPlaced === 1) {
@@ -118,15 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to start the cooldown
-    function startCooldown(timeLeft = cooldownTime) {
+    function startCooldown() {
         cooldown = true;
-        const cooldownEnd = Date.now() + timeLeft * 1000;
+        const cooldownEnd = new Date().getTime() + (cooldownTime * 1000);
         localStorage.setItem('cooldownEnd', cooldownEnd);
-        updateCountdownDisplay(timeLeft);
+        updateCountdownDisplay(cooldownTime);
 
         countdownTimer = setInterval(() => {
-            timeLeft--;
-            updateCountdownDisplay(timeLeft);
+            const timeLeft = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
 
             if (timeLeft <= 0) {
                 clearInterval(countdownTimer);
@@ -134,6 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 pixelsPlaced = 0; // Reset the pixel count
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
+            } else {
+                updateCountdownDisplay(timeLeft);
             }
         }, 1000);
     }
@@ -143,28 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60).toString().padStart(2, '0')}`;
     }
 
-    // Handle WebSocket events
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'newPixel') {
-            // Render a newly placed pixel from other users
-            const pixel = data.pixel;
-            ctx.fillStyle = pixel.color;
-            ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
-            placedPixels.push(pixel); // Update local state
-        }
-    };
-
-    // On page load, check if there's an active cooldown
-    const cooldownEnd = localStorage.getItem('cooldownEnd');
-    if (cooldownEnd) {
-        const now = Date.now();
-        const timeLeft = Math.floor((cooldownEnd - now) / 1000);
-
-        if (timeLeft > 0) {
-            startCooldown(timeLeft); // Resume cooldown
-        } else {
-            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
+    // Load the cooldown state on page load
+    function loadCooldownState() {
+        const cooldownEnd = localStorage.getItem('cooldownEnd');
+        if (cooldownEnd) {
+            const timeLeft = Math.floor((parseInt(cooldownEnd) - new Date().getTime()) / 1000);
+            if (timeLeft > 0) {
+                startCooldown(timeLeft);
+            }
         }
     }
 
@@ -190,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isCanvasUnlocked = true;
             userInput.value = ''; // Clear the input field
             wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
+            loadCooldownState(); // Check if cooldown is still active
         } else {
             alert('Incorrect access code or admin password. Please try again.');
         }
