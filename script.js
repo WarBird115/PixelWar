@@ -2,6 +2,7 @@ const canvas = document.getElementById('pixelCanvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const colorPicker = document.getElementById('colorPicker');
+const currentColorBox = document.getElementById('currentColor');
 const countdownDisplay = document.getElementById('countdown');
 const submitCodeButton = document.getElementById('submitCode');
 const userInput = document.getElementById('userInput');
@@ -23,11 +24,12 @@ const pixelSize = 10; // Adjusted pixel size
 // Update the current color display
 colorPicker.addEventListener('input', (e) => {
     currentColor = e.target.value;
+    currentColorBox.style.backgroundColor = currentColor;
 });
 
 // Function to place a pixel on the canvas
 function placePixel(x, y) {
-    if (isCanvasUnlocked && !cooldown && pixelsPlaced < 1) { // Limit to one pixel
+    if (isCanvasUnlocked && !cooldown) {
         // Calculate grid position
         const gridX = Math.floor(x / pixelSize) * pixelSize;
         const gridY = Math.floor(y / pixelSize) * pixelSize;
@@ -40,8 +42,8 @@ function placePixel(x, y) {
             placedPixels.push(pixelKey);
             pixelsPlaced++;
 
-            if (pixelsPlaced === 1) {
-                startCooldown(); // Start cooldown after one pixel is placed
+            if (pixelsPlaced === 5) {
+                startCooldown(); // Start cooldown when the 5th pixel is placed
             }
         }
     }
@@ -92,49 +94,54 @@ submitCodeButton.addEventListener('click', () => {
         isCanvasUnlocked = true; // Set the flag to true
         wipeCanvasButton.style.display = 'block'; // Show the wipe button
         userInput.value = ''; // Clear the input field
-        loadCanvasState(); // Load previous canvas state
     } else {
         alert('Incorrect access code. Please try again.');
     }
+    loadCanvasState(); // Load previous canvas state regardless of the access code
 });
 
 // Function to wipe the canvas
 wipeCanvasButton.addEventListener('click', () => {
     if (confirm("Are you sure you want to wipe the canvas? This action cannot be undone.")) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        placedPixels.length = 0; // Clear the array
-        cooldown = false; // Reset cooldown
-        countdownDisplay.textContent = 'Cooldown: 0:00'; // Reset countdown display
-        pixelsPlaced = 0; // Reset pixel count
-        localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
+        placedPixels.length = 0; // Clear the placed pixels array
+        localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
     }
 });
 
-// Save the canvas state to local storage
-function saveCanvasState() {
-    const canvasData = canvas.toDataURL();
-    localStorage.setItem('canvasData', canvasData);
-}
-
-// Load the canvas state from local storage
+// Load the saved canvas state from local storage
 function loadCanvasState() {
-    const canvasData = localStorage.getItem('canvasData');
-    if (canvasData) {
-        const img = new Image();
-        img.src = canvasData;
-        img.onload = () => {
-            ctx.drawImage(img, 0, 0);
-        };
+    const savedState = localStorage.getItem('canvasState');
+    if (savedState) {
+        const pixels = JSON.parse(savedState);
+        pixels.forEach(pixel => {
+            const [x, y, color] = pixel;
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, pixelSize, pixelSize);
+            placedPixels.push(`${x},${y}`);
+        });
     }
-}
 
-// Check for an existing cooldown on page load
-window.onload = () => {
+    // Load cooldown state
     const cooldownEnd = localStorage.getItem('cooldownEnd');
     if (cooldownEnd) {
-        const timeLeft = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
+        const timeLeft = Math.max(Math.round((cooldownEnd - new Date().getTime()) / 1000), 0);
         if (timeLeft > 0) {
             startCooldown(timeLeft);
         }
     }
-};
+}
+
+// Save the current state of the canvas to local storage
+function saveCanvasState() {
+    const canvasState = placedPixels.map(pixelKey => {
+        const [x, y] = pixelKey.split(',').map(Number);
+        const colorData = ctx.getImageData(x, y, pixelSize, pixelSize).data;
+        const color = `rgba(${colorData[0]}, ${colorData[1]}, ${colorData[2]}, ${colorData[3] / 255})`; // Convert to RGBA
+        return [x, y, color]; // Get pixel color in a usable format
+    });
+    localStorage.setItem('canvasState', JSON.stringify(canvasState));
+}
+
+// Load canvas state on initial page load
+window.onload = loadCanvasState;
