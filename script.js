@@ -7,6 +7,7 @@ const countdownDisplay = document.getElementById('countdown');
 const submitCodeButton = document.getElementById('submitCode');
 const userInput = document.getElementById('userInput');
 const wipeCanvasButton = document.getElementById('wipeCanvasButton');
+const accessCodeDisplay = document.getElementById('accessCodeDisplay'); // Ensure this element exists in your HTML
 
 let isCanvasUnlocked = false;
 let cooldown = false;
@@ -36,6 +37,7 @@ function generateRandomCode() {
 }
 
 let currentGeneratedCode = generateRandomCode(); // Generate initial code
+accessCodeDisplay.textContent = `Access Code: ${currentGeneratedCode}`; // Display the code
 console.log("Current Generated Code:", currentGeneratedCode); // Debugging line
 
 // Function to place a pixel on the canvas
@@ -98,7 +100,7 @@ submitCodeButton.addEventListener('click', () => {
     const code = userInput.value;
     console.log("Submitted Code:", code); // Debugging line
 
-    // Check if the entered code is the admin password
+    // Check if the entered code is the admin password or the generated code
     if (code === adminPassword) {
         unlockCanvas();
     } else if (code === currentGeneratedCode) {
@@ -124,6 +126,7 @@ wipeCanvasButton.addEventListener('click', () => {
         placedPixels.length = 0; // Clear the placed pixels array
         localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
         currentGeneratedCode = generateRandomCode(); // Generate a new random code
+        accessCodeDisplay.textContent = `Access Code: ${currentGeneratedCode}`; // Display the new code
         console.log("New Generated Code:", currentGeneratedCode); // Debugging line
     }
 });
