@@ -20,13 +20,16 @@ let currentColor = colorPicker.value;
 // Load cooldown state from local storage
 function loadCooldownState() {
     const savedCooldownEnd = localStorage.getItem('cooldownEnd');
+    console.log("Saved Cooldown End:", savedCooldownEnd); // Debugging message
     
     if (savedCooldownEnd) {
         const now = new Date().getTime();
         const cooldownEnd = parseInt(savedCooldownEnd, 10);
+        console.log("Current Time:", now, "Cooldown End Time:", cooldownEnd); // Debugging message
 
         if (now < cooldownEnd) {
             const timeLeft = Math.floor((cooldownEnd - now) / 1000);
+            console.log("Time Left on Cooldown:", timeLeft); // Debugging message
             startCooldown(timeLeft); // Restore the countdown timer
         }
     }
@@ -57,6 +60,7 @@ function placePixel(x, y) {
 function startCooldown(timeLeft = cooldownTime) {
     cooldown = true;
     const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
+    console.log("New Cooldown End:", cooldownEnd); // Debugging message
     localStorage.setItem('cooldownEnd', cooldownEnd);
 
     countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
@@ -96,7 +100,7 @@ submitCodeButton.addEventListener('click', () => {
     }
 });
 
-// Wipe canvas functionality (already present in your code)
+// Wipe canvas functionality
 wipeCanvasButton.addEventListener('click', () => {
     if (confirm("Are you sure you want to wipe the canvas? This action cannot be undone.")) {
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
