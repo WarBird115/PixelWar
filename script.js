@@ -19,13 +19,15 @@ let currentColor = colorPicker.value;
 
 // Load cooldown state from local storage
 function loadCooldownState() {
-    const savedCooldown = localStorage.getItem('cooldown');
-    const savedTimeLeft = localStorage.getItem('timeLeft');
+    const cooldownEnd = localStorage.getItem('cooldownEndTime');
 
-    if (savedCooldown === 'true' && savedTimeLeft) {
-        cooldown = true;
-        const timeLeft = parseInt(savedTimeLeft, 10);
-        startCooldown(timeLeft); // Restore the countdown timer
+    if (cooldownEnd) {
+        const timeLeft = Math.max(0, Math.floor((cooldownEnd - Date.now()) / 1000));
+        if (timeLeft > 0) {
+            startCooldown(timeLeft); // Restore the countdown timer
+        } else {
+            localStorage.removeItem('cooldownEndTime'); // Clear expired cooldown
+        }
     }
 }
 
@@ -53,26 +55,21 @@ function placePixel(x, y) {
 // Function to start the cooldown
 function startCooldown(timeLeft = cooldownTime) {
     cooldown = true;
+    const cooldownEndTime = Date.now() + timeLeft * 1000; // Calculate the end time
+    localStorage.setItem('cooldownEndTime', cooldownEndTime); // Save the end time to localStorage
+
     countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
     
-    // Save cooldown state to local storage
-    localStorage.setItem('cooldown', 'true');
-    localStorage.setItem('timeLeft', timeLeft);
-
     countdownTimer = setInterval(() => {
-        timeLeft--;
+        const timeLeft = Math.max(0, Math.floor((cooldownEndTime - Date.now()) / 1000));
         countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
-        
-        // Save the remaining time to local storage
-        localStorage.setItem('timeLeft', timeLeft);
 
         if (timeLeft <= 0) {
             clearInterval(countdownTimer);
             cooldown = false;
             pixelsPlaced = 0; // Reset the pixel count
             countdownDisplay.textContent = `Cooldown: 0:00`;
-            localStorage.removeItem('cooldown'); // Clear cooldown state
-            localStorage.removeItem('timeLeft'); // Clear time left
+            localStorage.removeItem('cooldownEndTime'); // Clear cooldown state
         }
     }, 1000);
 }
