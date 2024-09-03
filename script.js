@@ -36,6 +36,7 @@ function generateRandomCode() {
 }
 
 let currentGeneratedCode = generateRandomCode(); // Generate initial code
+console.log("Current Generated Code:", currentGeneratedCode); // Debugging line
 
 // Function to place a pixel on the canvas
 function placePixel(x, y) {
@@ -95,24 +96,26 @@ canvas.addEventListener('click', (e) => {
 // Function to handle access code submission
 submitCodeButton.addEventListener('click', () => {
     const code = userInput.value;
+    console.log("Submitted Code:", code); // Debugging line
 
     // Check if the entered code is the admin password
     if (code === adminPassword) {
-        overlay.style.display = 'none'; // Unlock the canvas
-        isCanvasUnlocked = true; // Set the flag to true
-        wipeCanvasButton.style.display = 'block'; // Show the wipe button
-        userInput.value = ''; // Clear the input field
-        loadCanvasState(); // Load previous canvas state
+        unlockCanvas();
     } else if (code === currentGeneratedCode) {
-        overlay.style.display = 'none'; // Unlock the canvas with the generated code
-        isCanvasUnlocked = true; // Set the flag to true
-        wipeCanvasButton.style.display = 'block'; // Show the wipe button
-        userInput.value = ''; // Clear the input field
-        loadCanvasState(); // Load previous canvas state
+        unlockCanvas();
     } else {
         alert('Incorrect access code. Please try again.');
     }
 });
+
+// Function to unlock the canvas
+function unlockCanvas() {
+    overlay.style.display = 'none'; // Unlock the canvas
+    isCanvasUnlocked = true; // Set the flag to true
+    wipeCanvasButton.style.display = 'block'; // Show the wipe button
+    userInput.value = ''; // Clear the input field
+    loadCanvasState(); // Load previous canvas state
+}
 
 // Function to wipe the canvas
 wipeCanvasButton.addEventListener('click', () => {
@@ -121,6 +124,7 @@ wipeCanvasButton.addEventListener('click', () => {
         placedPixels.length = 0; // Clear the placed pixels array
         localStorage.removeItem('canvasState'); // Clear the canvas state from local storage
         currentGeneratedCode = generateRandomCode(); // Generate a new random code
+        console.log("New Generated Code:", currentGeneratedCode); // Debugging line
     }
 });
 
