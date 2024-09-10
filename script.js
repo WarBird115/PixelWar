@@ -36,14 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadCanvasState() {
         try {
             const savedPixels = localStorage.getItem('placedPixels');
+            console.log('Attempting to load canvas state from localStorage:', savedPixels);
             if (savedPixels) {
                 const pixelData = JSON.parse(savedPixels);
+                console.log('Loaded pixel data:', pixelData);
                 pixelData.forEach(pixel => {
                     ctx.fillStyle = pixel.color;
                     ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
                     placedPixels.push(pixel);
                 });
-                console.log('Canvas state loaded:', pixelData);
             } else {
                 console.log('No saved canvas state found.');
             }
@@ -71,10 +72,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveCanvasState(); // Save the pixel placement to localStorage
 
                 pixelsPlaced++;
+                console.log(`Pixel placed at (${gridX}, ${gridY}) with color ${currentColor}. Total pixels placed: ${pixelsPlaced}`);
+
                 if (pixelsPlaced === 1) {
                     startCooldown(); // Start cooldown when the 1st pixel is placed
                 }
+            } else {
+                console.log(`Pixel at (${gridX}, ${gridY}) is already occupied.`);
             }
+        } else {
+            console.log('Canvas is locked or in cooldown.');
         }
     }
 
@@ -85,6 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('cooldownEnd', cooldownEnd);
         updateCountdownDisplay(timeLeft);
 
+        console.log('Cooldown started. Ends at:', new Date(cooldownEnd).toLocaleString());
+
         countdownTimer = setInterval(() => {
             const timeRemaining = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
 
@@ -94,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pixelsPlaced = 0; // Reset the pixel count
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
+                console.log('Cooldown finished.');
             } else {
                 updateCountdownDisplay(timeRemaining);
             }
@@ -112,7 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeLeft = Math.floor((parseInt(cooldownEnd) - new Date().getTime()) / 1000);
             if (timeLeft > 0) {
                 startCooldown(timeLeft);
+            } else {
+                console.log('Cooldown has already expired.');
             }
+        } else {
+            console.log('No cooldown state found.');
         }
     }
 
@@ -153,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('placedPixels'); // Clear localStorage
             localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
             alert('Canvas has been wiped!');
+            console.log('Canvas wiped. All states cleared.');
         }
     });
 
