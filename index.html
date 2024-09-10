@@ -111,8 +111,8 @@
         }
     </style>
     <!-- Include Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
 </head>
 <body>
     <h1>Pixel Wars</h1>
@@ -161,7 +161,7 @@
 
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.getDatabase(app);
+        const database = firebase.database(app); // Use this line to get the database reference
 
         document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('pixelCanvas');
@@ -253,16 +253,14 @@
 
                 countdownTimer = setInterval(() => {
                     const now = new Date().getTime();
-                    const remainingTime = cooldownEnd - now;
+                    const remainingTime = Math.max(0, cooldownEnd - now);
+                    updateCountdownDisplay(cooldownEnd);
 
                     if (remainingTime <= 0) {
                         clearInterval(countdownTimer);
                         cooldown = false;
-                        pixelsPlaced = 0;
                         countdownDisplay.textContent = 'Cooldown: 0:00';
-                        console.log('Cooldown Finished'); // Debugging log
-                    } else {
-                        updateCountdownDisplay(cooldownEnd);
+                        pixelsPlaced = 0; // Reset pixel count
                     }
                 }, 1000);
             }
@@ -270,63 +268,58 @@
             // Function to update the countdown display
             function updateCountdownDisplay(cooldownEnd) {
                 const now = new Date().getTime();
-                const remainingTime = cooldownEnd - now;
+                const remainingTime = Math.max(0, cooldownEnd - now);
                 const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
                 countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             }
 
-            // Event listener for canvas clicks
-            canvas.addEventListener('click', (e) => {
+            // Event listener for color picker
+            colorPicker.addEventListener('input', (event) => {
+                currentColor = event.target.value;
+            });
+
+            // Event listener for mouse clicks on the canvas
+            canvas.addEventListener('click', (event) => {
                 const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
                 placePixel(x, y);
             });
 
-            // Event listener for color picker change
-            colorPicker.addEventListener('input', (e) => {
-                currentColor = e.target.value;
-            });
-
-            // Event listener for code submission
+            // Event listener for the submit code button
             submitCodeButton.addEventListener('click', () => {
-                const accessCode = userInput.value;
-                if (accessCode === 'YOUR_ACCESS_CODE') { // Replace with your actual access code
-                    overlay.style.display = 'none'; // Hide overlay
-                    isCanvasUnlocked = true; // Unlock canvas
-                    wipeCanvasButton.style.display = 'inline'; // Show wipe button
+                const accessCode = userInput.value.trim();
+                if (accessCode === "YOUR_ACCESS_CODE_HERE") { // Replace with your actual access code
+                    overlay.style.display = 'none';
+                    isCanvasUnlocked = true;
+                    wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
                     loadCanvasState(); // Load canvas state from Firebase
                 } else {
                     alert('Incorrect access code. Please try again.');
                 }
             });
 
-            // Event listener for wipe canvas button
+            // Event listener for the wipe canvas button
             wipeCanvasButton.addEventListener('click', () => {
-                if (confirm('Are you sure you want to wipe the canvas? This action cannot be undone.')) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-                    placedPixels.length = 0; // Clear placed pixels array
-                    saveCanvasState(); // Save the cleared state to Firebase
+                if (confirm('Are you sure you want to wipe the canvas?')) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                    placedPixels.length = 0; // Clear the placed pixels array
+                    saveCanvasState(); // Save the cleared canvas state to Firebase
                 }
             });
 
-            // Load the saved canvas state on page load
+            // Load the initial state of the canvas from Firebase
             loadCanvasState();
+        });
 
-            // Load cooldown state on page load
+        // Retrieve cooldown end time on page load
+        window.onload = function() {
             const cooldownEnd = localStorage.getItem('cooldownEnd');
             if (cooldownEnd) {
-                const currentTime = new Date().getTime();
-                if (currentTime < cooldownEnd) {
-                    cooldown = true;
-                    updateCountdownDisplay(cooldownEnd);
-                    startCooldown(cooldownEnd);
-                } else {
-                    localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
-                }
+                startCooldown(cooldownEnd);
             }
-        });
+        };
     </script>
 </body>
 </html>
