@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCanvasUnlocked = false;
     let cooldown = false;
     let pixelsPlaced = 0;
-    const cooldownTime = 300; // 300 seconds (5 minutes)
+    const cooldownTime = 300; // 300 seconds = 5 minutes
     let countdownTimer;
     const pixelSize = 10;
 
@@ -19,7 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentColor = colorPicker.value;
 
     // Array to keep track of placed pixels
-    const placedPixels = [];
+    let placedPixels = JSON.parse(localStorage.getItem('placedPixels')) || [];
+
+    // Function to render saved pixels
+    function renderPixels() {
+        placedPixels.forEach(pixel => {
+            ctx.fillStyle = pixel.color;
+            ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+        });
+    }
 
     // Function to save the current state of the canvas to localStorage
     function saveCanvasState() {
@@ -52,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newPixel = {
                     x: gridX,
                     y: gridY,
-                    color: currentColor
+                    color: colorPicker.value
                 };
                 ctx.fillStyle = newPixel.color;
                 ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
@@ -146,5 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Load the canvas state when the page is loaded
-    loadCanvasState();
+    renderPixels();
+    loadCooldownState();
 });
