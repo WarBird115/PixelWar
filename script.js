@@ -175,7 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCountdownDisplay(cooldownEnd);
             startCooldown(cooldownEnd);
         } else {
-            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
+            // If the cooldown has expired, remove it from local storage
+            localStorage.removeItem('cooldownEnd');
+            cooldown = false;
+            countdownDisplay.textContent = 'Cooldown: 0:00'; // Reset display
         }
     }
 });
