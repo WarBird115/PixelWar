@@ -5,7 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Wars</title>
     <style>
-        /* Your CSS styles here */
+        body {
+            font-family: 'Verdana', sans-serif;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #ffcc00;
+        }
+
+        #pixelCanvas {
+            border: 1px solid #555;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #ffffff;
+        }
+
+        #canvasContainer {
+            position: relative;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        #colorOptions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        #accessSection {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #accessSection input {
+            padding: 5px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+        }
+
+        #wipeCanvasButton {
+            margin-top: 20px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff5555;
+            color: #ffffff;
+            cursor: pointer;
+            display: none; /* Initially hidden */
+        }
+
+        #countdown {
+            color: #ffcc00; /* Countdown text color */
+            margin-left: 10px;
+        }
+
+        #welcomeText {
+            margin-top: 30px;
+            max-width: 600px;
+            text-align: left;
+            font-size: 14px;
+            background-color: #3c3c3c;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            color: #e0e0e0;
+        }
+
+        #welcomeText h2 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #ffcc00;
+        }
+
+        #welcomeText ul {
+            padding-left: 20px;
+        }
+
+        #welcomeText li {
+            margin-bottom: 5px;
+        }
     </style>
     <!-- Include Firebase SDK -->
     <script type="module">
@@ -40,7 +143,6 @@
             const wipeCanvasButton = document.getElementById('wipeCanvasButton');
 
             let isCanvasUnlocked = false;
-            let isAdmin = false; // Track if the user is an admin
             let cooldown = false;
             let pixelsPlaced = 0;
             const cooldownTime = 300; // 300 seconds (5 minutes)
@@ -59,9 +161,7 @@
                 randomAccessCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
                 localStorage.setItem('randomAccessCode', randomAccessCode); // Store the random access code
             }
-
-            // Hide the admin code from the console
-            const adminCode = "Itsameamario1";
+            console.log("Random Access Code:", randomAccessCode); // Debugging log
 
             // Function to save the current state of the canvas to Firebase
             function saveCanvasState() {
@@ -144,14 +244,6 @@
                 countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             }
 
-            // Function to copy pixel color
-            function copyPixelColor(x, y) {
-                const pixelData = ctx.getImageData(x, y, 1, 1).data;
-                const hexColor = `#${((1 << 24) + (pixelData[0] << 16) + (pixelData[1] << 8) + pixelData[2]).toString(16).slice(1)}`;
-                colorPicker.value = hexColor;
-                alert(`Copied color: ${hexColor}`); // Optional feedback for the user
-            }
-
             // Event listener for mouse clicks on the canvas
             canvas.addEventListener('click', (event) => {
                 const rect = canvas.getBoundingClientRect();
@@ -160,56 +252,60 @@
                 placePixel(x, y);
             });
 
-            // Event listener for middle-click to copy pixel color
-            canvas.addEventListener('auxclick', (event) => {
-                if (event.button === 1) { // Middle click
-                    const rect = canvas.getBoundingClientRect();
-                    const x = event.clientX - rect.left;
-                    const y = event.clientY - rect.top;
-                    copyPixelColor(x, y);
-                }
-            });
-
             // Event listener for the color picker
             colorPicker.addEventListener('input', (event) => {
-                currentColor = event.target.value; // Update current color
+                currentColor = event.target.value;
             });
 
-            // Event listener for submit code button
+            // Event listener for the access code submission
             submitCodeButton.addEventListener('click', () => {
                 const inputCode = userInput.value;
-                if (inputCode === adminCode) {
-                    isAdmin = true; // Set user as admin
-                    wipeCanvasButton.style.display = 'block'; // Show clear canvas button for admin
-                    overlay.style.display = 'none'; // Remove overlay for admin
-                } else if (inputCode === randomAccessCode) {
-                    isCanvasUnlocked = true; // Set user as a regular user
-                    overlay.style.display = 'none'; // Remove overlay for user
+                if (inputCode === "Itsameamario1" || inputCode === randomAccessCode) {
+                    isCanvasUnlocked = true;
+                    overlay.style.display = 'none'; // Hide overlay
+                    wipeCanvasButton.style.display = 'inline-block'; // Show the "Clear Canvas" button
                 } else {
-                    alert('Invalid access code.'); // Alert for invalid code
+                    alert("Incorrect code. Please try again.");
+                }
+                userInput.value = ''; // Clear input after submission
+            });
+
+            // Event listener for the wipe canvas button
+            wipeCanvasButton.addEventListener('click', () => {
+                if (confirm("Are you sure you want to clear the canvas? This action cannot be undone.")) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    placedPixels.length = 0; // Clear the array
+                    saveCanvasState(); // Save the cleared state to Firebase
                 }
             });
 
-            // Event listener for clear canvas button
-            wipeCanvasButton.addEventListener('click', () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-                placedPixels.length = 0; // Clear the array
-                saveCanvasState(); // Save the cleared state to Firebase
-            });
-
-            loadCanvasState(); // Load the saved canvas state on page load
+            // Load the previous canvas state on page load
+            loadCanvasState();
         });
     </script>
 </head>
 <body>
     <h1>Pixel Wars</h1>
-    <canvas id="pixelCanvas" width="800" height="600" style="border:1px solid black;"></canvas>
-    <div id="overlay" style="display: block;">
-        <input type="text" id="userInput" placeholder="Enter access code">
+    <div id="canvasContainer">
+        <canvas id="pixelCanvas" width="800" height="600"></canvas>
+        <div id="overlay" class="overlay">Click to place pixels!</div>
+    </div>
+    <div id="colorOptions">
+        <input type="color" id="colorPicker" value="#ff0000">
+        <span id="countdown">Cooldown: 0:00</span>
+    </div>
+    <div id="accessSection">
+        <input type="text" id="userInput" placeholder="Enter Admin Code">
         <button id="submitCode">Submit</button>
     </div>
-    <input type="color" id="colorPicker">
-    <div id="countdown">Cooldown: 0:00</div>
-    <button id="wipeCanvasButton" style="display: none;">Clear Canvas</button>
+    <button id="wipeCanvasButton">Clear Canvas</button>
+    <div id="welcomeText">
+        <h2>Welcome to Pixel Wars!</h2>
+        <ul>
+            <li>Join the battle by placing pixels of your chosen color.</li>
+            <li>There is a cooldown period after each pixel placement.</li>
+            <li>Admins can clear the canvas using the admin code.</li>
+        </ul>
+    </div>
 </body>
 </html>
