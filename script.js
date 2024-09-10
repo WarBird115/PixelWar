@@ -25,11 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveCanvasState() {
         const savedPixels = JSON.stringify(placedPixels);
         localStorage.setItem('placedPixels', savedPixels);
+        console.log('Saved Pixels:', savedPixels); // Debugging log
     }
 
     // Function to load the saved state of the canvas from localStorage
     function loadCanvasState() {
         const savedPixels = localStorage.getItem('placedPixels');
+        console.log('Loaded Pixels:', savedPixels); // Debugging log
         if (savedPixels) {
             const pixelData = JSON.parse(savedPixels);
             pixelData.forEach(pixel => {
@@ -60,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveCanvasState(); // Save the pixel placement to localStorage
 
                 pixelsPlaced++;
+                console.log('Pixels Placed:', pixelsPlaced); // Debugging log
 
                 if (pixelsPlaced === 1) {
                     startCooldown(); // Start cooldown when the 1st pixel is placed
@@ -73,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cooldown = true;
         const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
         localStorage.setItem('cooldownEnd', cooldownEnd);
+        console.log('Cooldown End Set:', cooldownEnd); // Debugging log
         updateCountdownDisplay(timeLeft);
 
         countdownTimer = setInterval(() => {
@@ -84,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pixelsPlaced = 0; // Reset the pixel count
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
+                console.log('Cooldown expired'); // Debugging log
             } else {
                 updateCountdownDisplay(timeRemaining);
             }
@@ -98,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load the cooldown state on page load
     function loadCooldownState() {
         const cooldownEnd = localStorage.getItem('cooldownEnd');
+        console.log('Cooldown End Loaded:', cooldownEnd); // Debugging log
         if (cooldownEnd) {
             const timeLeft = Math.floor((parseInt(cooldownEnd) - new Date().getTime()) / 1000);
             if (timeLeft > 0) {
@@ -140,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
             placedPixels.length = 0; // Clear placed pixels
             localStorage.removeItem('placedPixels'); // Clear localStorage
+            console.log('Canvas wiped'); // Debugging log
             alert('Canvas has been wiped!');
         }
     });
