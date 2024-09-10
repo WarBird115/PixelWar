@@ -13,55 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let pixelsPlaced = 0;
     const cooldownTime = 300; // 300 seconds (5 minutes)
     let countdownTimer;
+    const pixelSize = 10;
 
     // Initialize pixel color
     let currentColor = colorPicker.value;
 
     // Array to keep track of placed pixels
     const placedPixels = [];
-    const pixelSize = 10; // Adjusted pixel size
-
-    // Function to generate a random 5-digit code
-    function generateRandomCode() {
-        return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a random 5-digit code
-    }
-
-    // Function to check if it's Sunday after 17:00
-    function isSundayAfterFive() {
-        const now = new Date();
-        return now.getDay() === 0 && now.getHours() >= 17; // Sunday = 0
-    }
-
-    // Function to load or generate the access code
-    function loadOrGenerateAccessCode() {
-        const lastGeneratedCode = localStorage.getItem('randomAccessCode');
-        const lastGeneratedTime = localStorage.getItem('lastGeneratedTime');
-        const now = new Date();
-
-        if (lastGeneratedCode && lastGeneratedTime) {
-            const lastTime = new Date(parseInt(lastGeneratedTime));
-
-            // If it's Sunday after 17:00 and the last code was generated earlier, generate a new code
-            if (isSundayAfterFive() && now > lastTime) {
-                const newCode = generateRandomCode();
-                localStorage.setItem('randomAccessCode', newCode);
-                localStorage.setItem('lastGeneratedTime', Date.now());
-            }
-        } else {
-            // Generate and store a new code if none exists
-            const newCode = generateRandomCode();
-            localStorage.setItem('randomAccessCode', newCode);
-            localStorage.setItem('lastGeneratedTime', Date.now());
-        }
-    }
-
-    // Call this function on page load
-    loadOrGenerateAccessCode();
-
-    // Update the current color display
-    colorPicker.addEventListener('input', (e) => {
-        currentColor = e.target.value;
-    });
 
     // Function to save the current state of the canvas to localStorage
     function saveCanvasState() {
@@ -112,23 +70,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to start the cooldown
-    function startCooldown() {
+    function startCooldown(timeLeft = cooldownTime) {
         cooldown = true;
-        const cooldownEnd = new Date().getTime() + (cooldownTime * 1000);
+        const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
         localStorage.setItem('cooldownEnd', cooldownEnd);
-        updateCountdownDisplay(cooldownTime);
+        updateCountdownDisplay(timeLeft);
 
         countdownTimer = setInterval(() => {
-            const timeLeft = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
+            const timeRemaining = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
 
-            if (timeLeft <= 0) {
+            if (timeRemaining <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
                 pixelsPlaced = 0; // Reset the pixel count
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
             } else {
-                updateCountdownDisplay(timeLeft);
+                updateCountdownDisplay(timeRemaining);
             }
         }, 1000);
     }
