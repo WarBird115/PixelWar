@@ -186,6 +186,10 @@
             // Array to keep track of placed pixels
             const placedPixels = [];
 
+            // Generate a random access code
+            const randomAccessCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
+            console.log("Random Access Code:", randomAccessCode); // Debugging log
+
             // Function to save the current state of the canvas to Firebase
             function saveCanvasState() {
                 set(ref(database, 'canvas/pixels'), placedPixels)
@@ -246,38 +250,26 @@
             // Function to start the cooldown
             function startCooldown(timeLeft = cooldownTime) {
                 cooldown = true;
-                const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
-                localStorage.setItem('cooldownEnd', cooldownEnd);
-                console.log('Cooldown End Set:', cooldownEnd); // Debugging log
-                updateCountdownDisplay(cooldownEnd);
+                let secondsLeft = timeLeft;
 
                 countdownTimer = setInterval(() => {
-                    const now = new Date().getTime();
-                    const remainingTime = Math.max(0, cooldownEnd - now);
-                    updateCountdownDisplay(cooldownEnd);
+                    secondsLeft--;
+                    updateCountdownDisplay(secondsLeft);
 
-                    if (remainingTime <= 0) {
+                    if (secondsLeft <= 0) {
                         clearInterval(countdownTimer);
                         cooldown = false;
-                        countdownDisplay.textContent = 'Cooldown: 0:00';
-                        pixelsPlaced = 0; // Reset pixel count
+                        countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
                     }
                 }, 1000);
             }
 
             // Function to update the countdown display
-            function updateCountdownDisplay(cooldownEnd) {
-                const now = new Date().getTime();
-                const remainingTime = Math.max(0, cooldownEnd - now);
-                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+            function updateCountdownDisplay(secondsLeft) {
+                const minutes = Math.floor(secondsLeft / 60);
+                const seconds = secondsLeft % 60;
                 countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             }
-
-            // Event listener for color picker
-            colorPicker.addEventListener('input', (event) => {
-                currentColor = event.target.value;
-            });
 
             // Event listener for mouse clicks on the canvas
             canvas.addEventListener('click', (event) => {
@@ -287,39 +279,38 @@
                 placePixel(x, y);
             });
 
-            // Event listener for the submit code button
+            // Event listener for the color picker
+            colorPicker.addEventListener('input', (event) => {
+                currentColor = event.target.value;
+            });
+
+            // Event listener for the access code submission
             submitCodeButton.addEventListener('click', () => {
-                const accessCode = userInput.value.trim();
-                if (accessCode === "YOUR_ACCESS_CODE_HERE") { // Replace with your actual access code
-                    overlay.style.display = 'none';
+                const inputCode = userInput.value;
+                if (inputCode === "Itsameamario1" || inputCode === randomAccessCode) {
                     isCanvasUnlocked = true;
-                    wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
-                    loadCanvasState(); // Load canvas state from Firebase
+                    overlay.style.display = 'none';
+                    wipeCanvasButton.style.display = 'block'; // Show the wipe button after unlocking
+                    loadCanvasState(); // Load the previous state of the canvas
+                    console.log('Canvas unlocked!'); // Debugging log
                 } else {
-                    alert('Incorrect access code. Please try again.');
+                    alert('Invalid access code. Please try again.');
                 }
+                userInput.value = ''; // Clear the input field after submission
             });
 
             // Event listener for the wipe canvas button
             wipeCanvasButton.addEventListener('click', () => {
-                if (confirm('Are you sure you want to wipe the canvas?')) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                if (confirm('Are you sure you want to wipe the canvas? This action cannot be undone!')) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
                     placedPixels.length = 0; // Clear the placed pixels array
-                    saveCanvasState(); // Save the cleared canvas state to Firebase
+                    saveCanvasState(); // Save the cleared state to Firebase
                 }
             });
 
-            // Load the initial state of the canvas from Firebase
+            // Load the canvas state when the page loads
             loadCanvasState();
         });
-
-        // Retrieve cooldown end time on page load
-        window.onload = function() {
-            const cooldownEnd = localStorage.getItem('cooldownEnd');
-            if (cooldownEnd) {
-                startCooldown(cooldownEnd);
-            }
-        };
     </script>
 </body>
 </html>
