@@ -1,19 +1,3 @@
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyANfAj-fw2yJ_1lw75fjZLGCxy6oTWBOJA",
-    authDomain: "pixel-war-deddd.firebaseapp.com",
-    databaseURL: "https://pixel-war-deddd-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "pixel-war-deddd",
-    storageBucket: "pixel-war-deddd.appspot.com",
-    messagingSenderId: "602125749650",
-    appId: "1:602125749650:web:5637bfbdacb77d227a454b",
-    measurementId: "G-D7CEB1DPH5"
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.getDatabase(app);
-
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('pixelCanvas');
     const ctx = canvas.getContext('2d');
@@ -36,6 +20,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Array to keep track of placed pixels
     const placedPixels = [];
+
+    // Timezone offset for Estonia (UTC+3 in minutes)
+    const estoniaOffset = 3 * 60;
+
+    // Function to get the current time in Estonia time
+    function getEstoniaTime() {
+        const now = new Date();
+        const localTimeOffset = now.getTimezoneOffset(); // Timezone offset in minutes
+        return new Date(now.getTime() + (estoniaOffset + localTimeOffset) * 60 * 1000);
+    }
+
+    // Function to check if it's past Sunday 20:50 Estonia time
+    function isPastSunday2050() {
+        const estoniaTime = getEstoniaTime();
+        const dayOfWeek = estoniaTime.getUTCDay(); // 0 = Sunday
+        const hours = estoniaTime.getUTCHours();
+        const minutes = estoniaTime.getUTCMinutes();
+
+        // Check if it's Sunday and past 20:50, or any day after Sunday
+        return (dayOfWeek === 0 && (hours > 20 || (hours === 20 && minutes >= 50))) || dayOfWeek > 0;
+    }
+
+    // Function to reset the random access code
+    function resetAccessCode() {
+        const newCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
+        localStorage.setItem('randomAccessCode', newCode); // Store the new random access code
+        localStorage.setItem('lastResetTime', getEstoniaTime().toISOString()); // Store the last reset time
+        return newCode;
+    }
+
+    // Get the last reset time from localStorage
+    let lastResetTime = localStorage.getItem('lastResetTime');
+    let randomAccessCode = localStorage.getItem('randomAccessCode');
+
+    // If there's no code or it's past Sunday 20:50, regenerate the code
+    if (!randomAccessCode || !lastResetTime || isPastSunday2050()) {
+        randomAccessCode = resetAccessCode();
+    }
+
+    console.log("Random Access Code:", randomAccessCode); // Debugging log
 
     // Function to save the current state of the canvas to Firebase
     function saveCanvasState() {
@@ -95,86 +119,66 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to start the cooldown
-    function startCooldown() {
+    function startCooldown(timeLeft = cooldownTime) {
         cooldown = true;
-        const cooldownEnd = Date.now() + (cooldownTime * 1000);
-        localStorage.setItem('cooldownEnd', cooldownEnd); // Save cooldown end time in localStorage
-        console.log('Cooldown End Set:', cooldownEnd); // Debugging log
-        updateCountdownDisplay(cooldownEnd);
+        let secondsLeft = timeLeft;
 
         countdownTimer = setInterval(() => {
-            const now = Date.now();
-            const remainingTime = cooldownEnd - now;
+            secondsLeft--;
+            updateCountdownDisplay(secondsLeft);
 
-            if (remainingTime <= 0) {
+            if (secondsLeft <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
-                pixelsPlaced = 0; // Reset pixels placed
-                countdownDisplay.textContent = 'Cooldown: 0:00';
-                console.log('Cooldown Finished'); // Debugging log
-            } else {
-                updateCountdownDisplay(cooldownEnd);
+                countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
             }
         }, 1000);
     }
 
     // Function to update the countdown display
-    function updateCountdownDisplay(cooldownEnd) {
-        const now = Date.now();
-        const remainingTime = cooldownEnd - now;
-        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+    function updateCountdownDisplay(secondsLeft) {
+        const minutes = Math.floor(secondsLeft / 60);
+        const seconds = secondsLeft % 60;
         countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
 
-    // Event listener for canvas clicks
-    canvas.addEventListener('click', (e) => {
+    // Event listener for mouse clicks on the canvas
+    canvas.addEventListener('click', (event) => {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
         placePixel(x, y);
     });
 
-    // Event listener for color picker change
-    colorPicker.addEventListener('input', (e) => {
-        currentColor = e.target.value;
+    // Event listener for the color picker
+    colorPicker.addEventListener('input', (event) => {
+        currentColor = event.target.value;
     });
 
-    // Event listener for code submission
+    // Event listener for the access code submission
     submitCodeButton.addEventListener('click', () => {
-        const accessCode = userInput.value;
-        if (accessCode === 'Itsameamario1' || accessCode === localStorage.getItem('randomAccessCode')) { // Use the random access code
-            overlay.style.display = 'none'; // Hide overlay
-            isCanvasUnlocked = true; // Unlock canvas
-            wipeCanvasButton.style.display = 'inline'; // Show wipe button
-            loadCanvasState(); // Load canvas state from Firebase
+        const inputCode = userInput.value;
+        if (inputCode === "Itsameamario1" || inputCode === randomAccessCode) {
+            isCanvasUnlocked = true;
+            overlay.style.display = 'none';
+            wipeCanvasButton.style.display = 'block'; // Show the wipe button after unlocking
+            loadCanvasState(); // Load the previous state of the canvas
+            console.log('Canvas unlocked!'); // Debugging log
         } else {
-            alert('Incorrect access code. Please try again.');
+            alert('Invalid access code. Please try again.');
         }
+        userInput.value = ''; // Clear the input field after submission
     });
 
-    // Event listener for wipe canvas button
+    // Event listener for the wipe canvas button
     wipeCanvasButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to wipe the canvas? This action cannot be undone.')) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-            placedPixels.length = 0; // Clear placed pixels array
+        if (confirm('Are you sure you want to wipe the canvas? This action cannot be undone!')) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            placedPixels.length = 0; // Clear the placed pixels array
             saveCanvasState(); // Save the cleared state to Firebase
         }
     });
 
-    // Load the saved canvas state on page load
+    // Load the canvas state when the page loads
     loadCanvasState();
-
-    // Load cooldown state on page load
-    const cooldownEnd = localStorage.getItem('cooldownEnd');
-    if (cooldownEnd) {
-        const currentTime = Date.now();
-        if (currentTime < cooldownEnd) {
-            cooldown = true;
-            updateCountdownDisplay(cooldownEnd);
-            startCooldown(); // Start the countdown timer
-        } else {
-            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
-        }
-    }
 });
