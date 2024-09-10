@@ -23,24 +23,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to save the current state of the canvas to localStorage
     function saveCanvasState() {
-        const savedPixels = JSON.stringify(placedPixels);
-        localStorage.setItem('placedPixels', savedPixels);
-        console.log('Canvas state saved:', savedPixels); // Debug log
+        try {
+            const savedPixels = JSON.stringify(placedPixels);
+            localStorage.setItem('placedPixels', savedPixels);
+            console.log('Canvas state saved:', savedPixels);
+        } catch (error) {
+            console.error('Error saving canvas state:', error);
+        }
     }
 
     // Function to load the saved state of the canvas from localStorage
     function loadCanvasState() {
-        const savedPixels = localStorage.getItem('placedPixels');
-        if (savedPixels) {
-            const pixelData = JSON.parse(savedPixels);
-            pixelData.forEach(pixel => {
-                ctx.fillStyle = pixel.color;
-                ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
-                placedPixels.push(pixel);
-            });
-            console.log('Canvas state loaded:', pixelData); // Debug log
-        } else {
-            console.log('No saved canvas state found.'); // Debug log
+        try {
+            const savedPixels = localStorage.getItem('placedPixels');
+            if (savedPixels) {
+                const pixelData = JSON.parse(savedPixels);
+                pixelData.forEach(pixel => {
+                    ctx.fillStyle = pixel.color;
+                    ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+                    placedPixels.push(pixel);
+                });
+                console.log('Canvas state loaded:', pixelData);
+            } else {
+                console.log('No saved canvas state found.');
+            }
+        } catch (error) {
+            console.error('Error loading canvas state:', error);
         }
     }
 
@@ -49,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isCanvasUnlocked && !cooldown) {
             const gridX = Math.floor(x / pixelSize) * pixelSize;
             const gridY = Math.floor(y / pixelSize) * pixelSize;
-            const pixelKey = `${gridX},${gridY}`;
 
             // Check if the pixel position is already occupied
             if (!placedPixels.some(pixel => pixel.x === gridX && pixel.y === gridY)) {
@@ -61,11 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.fillStyle = newPixel.color;
                 ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
                 placedPixels.push(newPixel);
-
                 saveCanvasState(); // Save the pixel placement to localStorage
 
                 pixelsPlaced++;
-
                 if (pixelsPlaced === 1) {
                     startCooldown(); // Start cooldown when the 1st pixel is placed
                 }
@@ -111,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Add event listener for canvas click
+    // Event listener for canvas click
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -120,12 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
         placePixel(x, y);
     });
 
-    // Add event listener for submitting access code
+    // Event listener for submitting access code
     submitCodeButton.addEventListener('click', () => {
         const accessCode = localStorage.getItem('randomAccessCode');
         const adminPassword = "Itsameamario1"; // Set the admin password
 
-        console.log(`Access Code: ${accessCode}, User Input: ${userInput.value}, Admin Password: ${adminPassword}`); // Debugging log
+        console.log(`Access Code: ${accessCode}, User Input: ${userInput.value}, Admin Password: ${adminPassword}`);
 
         // Check if the user input matches either the access code or the admin password
         if (userInput.value === accessCode || userInput.value === adminPassword) {
@@ -140,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Add event listener for the wipe canvas button
+    // Event listener for the wipe canvas button
     wipeCanvasButton.addEventListener('click', () => {
         if (confirm('Are you sure you want to wipe the canvas?')) {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
