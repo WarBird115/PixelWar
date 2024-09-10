@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveCanvasState() {
         const savedPixels = JSON.stringify(placedPixels);
         localStorage.setItem('placedPixels', savedPixels);
-        console.log('Canvas state saved:', savedPixels); // Debugging log
+        console.log('Canvas state saved:', savedPixels); // Debug log
     }
 
     // Function to load the saved state of the canvas from localStorage
@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
                 placedPixels.push(pixel);
             });
-            console.log('Loaded canvas state:', pixelData); // Debugging log
+            console.log('Canvas state loaded:', pixelData); // Debug log
+        } else {
+            console.log('No saved canvas state found.'); // Debug log
         }
     }
 
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isCanvasUnlocked && !cooldown) {
             const gridX = Math.floor(x / pixelSize) * pixelSize;
             const gridY = Math.floor(y / pixelSize) * pixelSize;
+            const pixelKey = `${gridX},${gridY}`;
 
             // Check if the pixel position is already occupied
             if (!placedPixels.some(pixel => pixel.x === gridX && pixel.y === gridY)) {
@@ -131,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.value = ''; // Clear the input field
             wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
             loadCooldownState(); // Check if cooldown is still active
+            loadCanvasState(); // Load the canvas state on unlock
         } else {
             alert('Incorrect access code or admin password. Please try again.');
         }
@@ -142,11 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
             placedPixels.length = 0; // Clear placed pixels
             localStorage.removeItem('placedPixels'); // Clear localStorage
+            localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
             alert('Canvas has been wiped!');
         }
     });
 
     // Load the canvas state when the page is loaded
     loadCanvasState();
-    loadCooldownState(); // Load cooldown state as well
 });
