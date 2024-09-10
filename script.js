@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cooldown = true;
         const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
         localStorage.setItem('cooldownEnd', cooldownEnd);
+        localStorage.setItem('cooldownTimeLeft', timeLeft); // Save the remaining time
         console.log('Cooldown End Set:', cooldownEnd); // Debugging log
         updateCountdownDisplay(cooldownEnd);
 
@@ -112,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pixelsPlaced = 0; // Reset pixels placed
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 console.log('Cooldown Finished'); // Debugging log
-                localStorage.removeItem('cooldownEnd'); // Remove cooldown from local storage
+                localStorage.removeItem('cooldownEnd'); // Clear expired cooldown from local storage
             } else {
                 updateCountdownDisplay(cooldownEnd);
             }
@@ -175,10 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCountdownDisplay(cooldownEnd);
             startCooldown(cooldownEnd);
         } else {
-            // If the cooldown has expired, remove it from local storage
-            localStorage.removeItem('cooldownEnd');
-            cooldown = false;
-            countdownDisplay.textContent = 'Cooldown: 0:00'; // Reset display
+            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
         }
     }
 });
