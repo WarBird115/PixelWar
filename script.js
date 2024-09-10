@@ -1,3 +1,19 @@
+// Your web app's Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyANfAj-fw2yJ_1lw75fjZLGCxy6oTWBOJA",
+    authDomain: "pixel-war-deddd.firebaseapp.com",
+    databaseURL: "https://pixel-war-deddd-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "pixel-war-deddd",
+    storageBucket: "pixel-war-deddd.appspot.com",
+    messagingSenderId: "602125749650",
+    appId: "1:602125749650:web:5637bfbdacb77d227a454b",
+    measurementId: "G-D7CEB1DPH5"
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const database = firebase.getDatabase(app);
+
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('pixelCanvas');
     const ctx = canvas.getContext('2d');
@@ -21,25 +37,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Array to keep track of placed pixels
     const placedPixels = [];
 
-    // Function to save the current state of the canvas to localStorage
+    // Function to save the current state of the canvas to Firebase
     function saveCanvasState() {
-        const savedPixels = JSON.stringify(placedPixels);
-        localStorage.setItem('placedPixels', savedPixels);
-        console.log('Saved Pixels:', savedPixels); // Debugging log
+        set(ref(database, 'canvas/pixels'), placedPixels)
+            .then(() => {
+                console.log('Canvas state saved to Firebase.'); // Debugging log
+            })
+            .catch((error) => {
+                console.error('Error saving canvas state:', error); // Debugging log
+            });
     }
 
-    // Function to load the saved state of the canvas from localStorage
+    // Function to load the saved state of the canvas from Firebase
     function loadCanvasState() {
-        const savedPixels = localStorage.getItem('placedPixels');
-        console.log('Loaded Pixels:', savedPixels); // Debugging log
-        if (savedPixels) {
-            const pixelData = JSON.parse(savedPixels);
-            pixelData.forEach(pixel => {
-                ctx.fillStyle = pixel.color;
-                ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
-                placedPixels.push(pixel);
-            });
-        }
+        const canvasRef = ref(database, 'canvas/pixels');
+        onValue(canvasRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.length > 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
+                data.forEach(pixel => {
+                    ctx.fillStyle = pixel.color;
+                    ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+                    placedPixels.push(pixel);
+                });
+                console.log('Loaded canvas state from Firebase.'); // Debugging log
+            }
+        });
     }
 
     // Function to place a pixel on the canvas
@@ -59,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
                 placedPixels.push(newPixel);
 
-                saveCanvasState(); // Save the pixel placement to localStorage
+                saveCanvasState(); // Save the pixel placement to Firebase
 
                 pixelsPlaced++;
                 console.log('Pixels Placed:', pixelsPlaced); // Debugging log
@@ -77,81 +100,81 @@ document.addEventListener('DOMContentLoaded', () => {
         const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
         localStorage.setItem('cooldownEnd', cooldownEnd);
         console.log('Cooldown End Set:', cooldownEnd); // Debugging log
-        updateCountdownDisplay(timeLeft);
+        updateCountdownDisplay(cooldownEnd);
 
         countdownTimer = setInterval(() => {
-            const timeRemaining = Math.floor((cooldownEnd - new Date().getTime()) / 1000);
+            const now = new Date().getTime();
+            const remainingTime = cooldownEnd - now;
 
-            if (timeRemaining <= 0) {
+            if (remainingTime <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
-                pixelsPlaced = 0; // Reset the pixel count
+                pixelsPlaced = 0;
                 countdownDisplay.textContent = 'Cooldown: 0:00';
-                localStorage.removeItem('cooldownEnd'); // Clear cooldown end time
-                console.log('Cooldown expired'); // Debugging log
+                console.log('Cooldown Finished'); // Debugging log
             } else {
-                updateCountdownDisplay(timeRemaining);
+                updateCountdownDisplay(cooldownEnd);
             }
         }, 1000);
     }
 
-    // Function to update countdown display
-    function updateCountdownDisplay(timeLeft) {
-        countdownDisplay.textContent = `Cooldown: ${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60).toString().padStart(2, '0')}`;
+    // Function to update the countdown display
+    function updateCountdownDisplay(cooldownEnd) {
+        const now = new Date().getTime();
+        const remainingTime = cooldownEnd - now;
+        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+        countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
 
-    // Load the cooldown state on page load
-    function loadCooldownState() {
-        const cooldownEnd = localStorage.getItem('cooldownEnd');
-        console.log('Cooldown End Loaded:', cooldownEnd); // Debugging log
-        if (cooldownEnd) {
-            const timeLeft = Math.floor((parseInt(cooldownEnd) - new Date().getTime()) / 1000);
-            if (timeLeft > 0) {
-                startCooldown(timeLeft);
-            }
-        }
-    }
-
-    // Add event listener for canvas click
+    // Event listener for canvas clicks
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
         placePixel(x, y);
     });
 
-    // Add event listener for submitting access code
+    // Event listener for color picker change
+    colorPicker.addEventListener('input', (e) => {
+        currentColor = e.target.value;
+    });
+
+    // Event listener for code submission
     submitCodeButton.addEventListener('click', () => {
-        const accessCode = localStorage.getItem('randomAccessCode');
-        const adminPassword = "Itsameamario1"; // Set the admin password
-
-        console.log(`Access Code: ${accessCode}, User Input: ${userInput.value}, Admin Password: ${adminPassword}`); // Debugging log
-
-        // Check if the user input matches either the access code or the admin password
-        if (userInput.value === accessCode || userInput.value === adminPassword) {
-            overlay.style.display = 'none';
-            isCanvasUnlocked = true;
-            userInput.value = ''; // Clear the input field
-            wipeCanvasButton.style.display = 'block'; // Show the wipe canvas button
-            loadCooldownState(); // Check if cooldown is still active
+        const accessCode = userInput.value;
+        if (accessCode === 'YOUR_ACCESS_CODE') { // Replace with your actual access code
+            overlay.style.display = 'none'; // Hide overlay
+            isCanvasUnlocked = true; // Unlock canvas
+            wipeCanvasButton.style.display = 'inline'; // Show wipe button
+            loadCanvasState(); // Load canvas state from Firebase
         } else {
-            alert('Incorrect access code or admin password. Please try again.');
+            alert('Incorrect access code. Please try again.');
         }
     });
 
-    // Add event listener for the wipe canvas button
+    // Event listener for wipe canvas button
     wipeCanvasButton.addEventListener('click', () => {
-        if (confirm('Are you sure you want to wipe the canvas?')) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-            placedPixels.length = 0; // Clear placed pixels
-            localStorage.removeItem('placedPixels'); // Clear localStorage
-            console.log('Canvas wiped'); // Debugging log
-            alert('Canvas has been wiped!');
+        if (confirm('Are you sure you want to wipe the canvas? This action cannot be undone.')) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            placedPixels.length = 0; // Clear placed pixels array
+            saveCanvasState(); // Save the cleared state to Firebase
         }
     });
 
-    // Load the canvas state when the page is loaded
+    // Load the saved canvas state on page load
     loadCanvasState();
-    loadCooldownState(); // Load cooldown state as well
+
+    // Load cooldown state on page load
+    const cooldownEnd = localStorage.getItem('cooldownEnd');
+    if (cooldownEnd) {
+        const currentTime = new Date().getTime();
+        if (currentTime < cooldownEnd) {
+            cooldown = true;
+            updateCountdownDisplay(cooldownEnd);
+            startCooldown(cooldownEnd);
+        } else {
+            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
+        }
+    }
 });
