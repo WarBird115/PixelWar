@@ -95,16 +95,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Function to start the cooldown
-    function startCooldown(timeLeft = cooldownTime) {
+    function startCooldown() {
         cooldown = true;
-        const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
-        localStorage.setItem('cooldownEnd', cooldownEnd);
-        localStorage.setItem('cooldownTimeLeft', timeLeft); // Save the remaining time
+        const cooldownEnd = Date.now() + (cooldownTime * 1000);
+        localStorage.setItem('cooldownEnd', cooldownEnd); // Save cooldown end time in localStorage
         console.log('Cooldown End Set:', cooldownEnd); // Debugging log
         updateCountdownDisplay(cooldownEnd);
 
         countdownTimer = setInterval(() => {
-            const now = new Date().getTime();
+            const now = Date.now();
             const remainingTime = cooldownEnd - now;
 
             if (remainingTime <= 0) {
@@ -113,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 pixelsPlaced = 0; // Reset pixels placed
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 console.log('Cooldown Finished'); // Debugging log
-                localStorage.removeItem('cooldownEnd'); // Clear expired cooldown from local storage
             } else {
                 updateCountdownDisplay(cooldownEnd);
             }
@@ -122,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to update the countdown display
     function updateCountdownDisplay(cooldownEnd) {
-        const now = new Date().getTime();
+        const now = Date.now();
         const remainingTime = cooldownEnd - now;
         const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
@@ -170,11 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load cooldown state on page load
     const cooldownEnd = localStorage.getItem('cooldownEnd');
     if (cooldownEnd) {
-        const currentTime = new Date().getTime();
+        const currentTime = Date.now();
         if (currentTime < cooldownEnd) {
             cooldown = true;
             updateCountdownDisplay(cooldownEnd);
-            startCooldown(cooldownEnd);
+            startCooldown(); // Start the countdown timer
         } else {
             localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
         }
