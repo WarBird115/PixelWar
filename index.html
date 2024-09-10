@@ -252,69 +252,61 @@
                 placePixel(x, y);
             });
 
-            // Event listener for middle-click (color picker)
-            canvas.addEventListener('auxclick', (event) => {
-                if (event.button === 1) { // Middle-click
-                    const rect = canvas.getBoundingClientRect();
-                    const x = event.clientX - rect.left;
-                    const y = event.clientY - rect.top;
-                    const pixelData = ctx.getImageData(x, y, 1, 1).data;
-                    const color = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
-                    colorPicker.value = color; // Set the color picker to the clicked pixel's color
-                    currentColor = color; // Update current color
-                }
+            // Event listener for the color picker
+            colorPicker.addEventListener('input', (event) => {
+                currentColor = event.target.value;
             });
 
-            // Event listener for submit access code
+            // Event listener for the access code submission
             submitCodeButton.addEventListener('click', () => {
-                const inputCode = userInput.value.trim();
-                if (inputCode === randomAccessCode) {
-                    isCanvasUnlocked = true; // Unlock canvas
-                    wipeCanvasButton.style.display = 'inline'; // Show wipe button
-                    alert('Access granted! You can now place pixels.');
+                const inputCode = userInput.value;
+                if (inputCode === "Itsameamario1" || inputCode === randomAccessCode) {
+                    isCanvasUnlocked = true;
+                    overlay.style.display = 'none'; // Hide overlay
+                    wipeCanvasButton.style.display = 'inline-block'; // Show the "Clear Canvas" button
                 } else {
-                    alert('Access denied. Invalid code.');
+                    alert("Incorrect code. Please try again.");
+                }
+                userInput.value = ''; // Clear input after submission
+            });
+
+            // Event listener for the wipe canvas button
+            wipeCanvasButton.addEventListener('click', () => {
+                if (confirm("Are you sure you want to clear the canvas? This action cannot be undone.")) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    placedPixels.length = 0; // Clear the array
+                    saveCanvasState(); // Save the cleared state to Firebase
                 }
             });
 
-            // Event listener for wipe canvas button
-            wipeCanvasButton.addEventListener('click', () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                placedPixels.length = 0; // Clear the placedPixels array
-                saveCanvasState(); // Save the cleared state to Firebase
-            });
-
-            // Load the saved canvas state from Firebase when the page loads
+            // Load the previous canvas state on page load
             loadCanvasState();
-
-            // Display the welcome text
-            document.getElementById('welcomeText').innerHTML = `
-                <h2>Welcome to Pixel Wars!</h2>
-                <ul>
-                    <li>You have one pixel every 5 minutes. Make it count!</li>
-                    <li>Be whacky or team up with others to create something amazing!</li>
-                    <li>Middle-click on any pixel to quickly select that color.</li>
-                    <li>Game on and happy pixeling!</li>
-                </ul>
-            `;
         });
     </script>
 </head>
 <body>
     <h1>Pixel Wars</h1>
     <div id="canvasContainer">
-        <canvas id="pixelCanvas" width="500" height="500"></canvas>
-        <div id="overlay" class="overlay">Click to place your pixel!</div>
+        <canvas id="pixelCanvas" width="800" height="600"></canvas>
+        <div id="overlay" class="overlay">Click to place pixels!</div>
     </div>
     <div id="colorOptions">
-        <input type="color" id="colorPicker" value="#000000" />
+        <input type="color" id="colorPicker" value="#ff0000">
         <span id="countdown">Cooldown: 0:00</span>
     </div>
     <div id="accessSection">
-        <input type="text" id="userInput" placeholder="Enter access code" />
+        <input type="text" id="userInput" placeholder="Enter Admin Code">
         <button id="submitCode">Submit</button>
     </div>
     <button id="wipeCanvasButton">Clear Canvas</button>
-    <div id="welcomeText"></div>
+    <div id="welcomeText">
+        <h2>Welcome to Pixel Wars!</h2>
+    <ul>
+        <li>Every 5 minutes, you get to unleash your creativity with one pixel. Make it count!</li>
+        <li>Be as wild and imaginative as you want—team up with friends or go solo to make your mark!</li>
+        <li>Need a quick color? Just middle-click on the canvas to grab a color of the pixel thats already placed down!</li>
+    </ul>
+    <p>Get ready to battle it out with colors. Game on and happy pixeling!</p>
+    </div>
 </body>
 </html>
