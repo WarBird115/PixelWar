@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (remainingTime <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
-                pixelsPlaced = 0;
+                pixelsPlaced = 0; // Reset pixels placed
                 countdownDisplay.textContent = 'Cooldown: 0:00';
                 console.log('Cooldown Finished'); // Debugging log
             } else {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for code submission
     submitCodeButton.addEventListener('click', () => {
         const accessCode = userInput.value;
-        if (accessCode === 'YOUR_ACCESS_CODE') { // Replace with your actual access code
+        if (accessCode === 'Itsameamario1' || accessCode === localStorage.getItem('randomAccessCode')) { // Use the random access code
             overlay.style.display = 'none'; // Hide overlay
             isCanvasUnlocked = true; // Unlock canvas
             wipeCanvasButton.style.display = 'inline'; // Show wipe button

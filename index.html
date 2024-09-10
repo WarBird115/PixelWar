@@ -111,42 +111,7 @@
         }
     </style>
     <!-- Include Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
-</head>
-<body>
-    <h1>Pixel Wars</h1>
-    <div id="canvasContainer">
-        <canvas id="pixelCanvas" width="500" height="500"></canvas>
-        <div class="overlay" id="overlay">Enter Access Code to Unlock Canvas</div>
-    </div>
-    
-    <div id="colorOptions">
-        <input type="color" id="colorPicker" value="#000000">
-        <div id="countdown">Cooldown: 0:00</div>
-    </div>
-
-    <div id="accessSection">
-        <label for="userInput">Enter Access Code:</label>
-        <input type="text" id="userInput" placeholder="Enter your code here">
-        <button id="submitCode">Submit</button>
-    </div>
-
-    <button id="wipeCanvasButton">Wipe Canvas</button>
-
-    <div id="welcomeText">
-        <h2>Welcome to Pixel Wars!</h2>
-        <p>This space is all about collaboration and creativity. Go wild, be quirky, or team up with others to create something amazing. The image you create here will become our server banner at the end of every month. You've got one pixel every 5 minutes, so make it count!</p>
-        <p>Here are some quick tips to get you started:</p>
-        <ul>
-            <li>Click on the canvas to place a pixel.</li>
-            <li>Middle-click on the canvas to quickly pick a color that’s already been placed.</li>
-            <li>You can replace any pixel, no matter who placed it there!</li>
-        </ul>
-        <p>Game on and happy pixeling!</p>
-    </div>
-
-    <script>
+    <script type="module">
         // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyANfAj-fw2yJ_1lw75fjZLGCxy6oTWBOJA",
@@ -159,9 +124,13 @@
             measurementId: "G-D7CEB1DPH5"
         };
 
+        // Import the Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app); // Use this line to get the database reference
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
         document.addEventListener('DOMContentLoaded', () => {
             const canvas = document.getElementById('pixelCanvas');
@@ -186,8 +155,12 @@
             // Array to keep track of placed pixels
             const placedPixels = [];
 
-            // Generate a random access code
-            const randomAccessCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
+            // Get or generate a random access code
+            let randomAccessCode = localStorage.getItem('randomAccessCode');
+            if (!randomAccessCode) {
+                randomAccessCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
+                localStorage.setItem('randomAccessCode', randomAccessCode); // Store the random access code
+            }
             console.log("Random Access Code:", randomAccessCode); // Debugging log
 
             // Function to save the current state of the canvas to Firebase
@@ -312,5 +285,37 @@
             loadCanvasState();
         });
     </script>
+</head>
+<body>
+    <h1>Pixel Wars</h1>
+    <div id="canvasContainer">
+        <canvas id="pixelCanvas" width="500" height="500"></canvas>
+        <div class="overlay" id="overlay">Enter Access Code to Unlock Canvas</div>
+    </div>
+    
+    <div id="colorOptions">
+        <input type="color" id="colorPicker" value="#000000">
+        <div id="countdown">Cooldown: 0:00</div>
+    </div>
+
+    <div id="accessSection">
+        <label for="userInput">Enter Access Code:</label>
+        <input type="text" id="userInput" placeholder="Enter your code here">
+        <button id="submitCode">Submit</button>
+    </div>
+
+    <button id="wipeCanvasButton">Wipe Canvas</button>
+
+    <div id="welcomeText">
+        <h2>Welcome to Pixel Wars!</h2>
+        <p>This space is all about collaboration and creativity. Go wild, be quirky, or team up with others to create something amazing. The image you create here will become our server banner at the end of every month. You've got one pixel every 5 minutes, so make it count!</p>
+        <p>Here are some quick tips to get you started:</p>
+        <ul>
+            <li>Click on the canvas to place a pixel.</li>
+            <li>Middle-click on the canvas to quickly pick a color that’s already been placed.</li>
+            <li>You can replace any pixel, no matter who placed it there!</li>
+        </ul>
+        <p>Game on and happy pixeling!</p>
+    </div>
 </body>
 </html>
