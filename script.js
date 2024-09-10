@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startCooldown(timeLeft = cooldownTime) {
         cooldown = true;
         const cooldownEnd = new Date().getTime() + (timeLeft * 1000);
-        localStorage.setItem('cooldownEnd', cooldownEnd);
+        localStorage.setItem('cooldownEnd', cooldownEnd); // Save cooldown end time to localStorage
         console.log('Cooldown End Set:', cooldownEnd); // Debugging log
         updateCountdownDisplay(cooldownEnd);
 
@@ -148,6 +148,19 @@ document.addEventListener('DOMContentLoaded', () => {
             isCanvasUnlocked = true; // Unlock canvas
             wipeCanvasButton.style.display = 'inline'; // Show wipe button
             loadCanvasState(); // Load canvas state from Firebase
+            
+            // Load cooldown state on page load
+            const cooldownEnd = localStorage.getItem('cooldownEnd');
+            if (cooldownEnd) {
+                const currentTime = new Date().getTime();
+                if (currentTime < cooldownEnd) {
+                    cooldown = true;
+                    updateCountdownDisplay(cooldownEnd);
+                    startCooldown(cooldownEnd);
+                } else {
+                    localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
+                }
+            }
         } else {
             alert('Incorrect access code. Please try again.');
         }
@@ -164,17 +177,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load the saved canvas state on page load
     loadCanvasState();
-
-    // Load cooldown state on page load
-    const cooldownEnd = localStorage.getItem('cooldownEnd');
-    if (cooldownEnd) {
-        const currentTime = new Date().getTime();
-        if (currentTime < cooldownEnd) {
-            cooldown = true;
-            updateCountdownDisplay(cooldownEnd);
-            startCooldown(cooldownEnd);
-        } else {
-            localStorage.removeItem('cooldownEnd'); // Clear expired cooldown
-        }
-    }
 });
