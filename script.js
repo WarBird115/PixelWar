@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isCanvasUnlocked = false;
     let cooldown = false;
     let pixelsPlaced = 0;
-    const cooldownTime = 300; // 300 seconds = 5 minutes
+    const cooldownTime = 300; // 300 seconds (5 minutes)
     let countdownTimer;
     const pixelSize = 10;
 
@@ -19,30 +19,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentColor = colorPicker.value;
 
     // Array to keep track of placed pixels
-    let placedPixels = JSON.parse(localStorage.getItem('placedPixels')) || [];
-
-    // Debugging: log the current state of placedPixels on load
-    console.log('Loaded placedPixels:', placedPixels);
-
-    // Function to render saved pixels
-    function renderPixels() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
-        placedPixels.forEach(pixel => {
-            ctx.fillStyle = pixel.color;
-            ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
-        });
-
-        // Debugging: log after rendering
-        console.log('Rendered placedPixels:', placedPixels);
-    }
+    const placedPixels = [];
 
     // Function to save the current state of the canvas to localStorage
     function saveCanvasState() {
         const savedPixels = JSON.stringify(placedPixels);
         localStorage.setItem('placedPixels', savedPixels);
+        console.log('Canvas state saved:', savedPixels); // Debugging log
+    }
 
-        // Debugging: log the save action
-        console.log('Saved placedPixels to localStorage:', savedPixels);
+    // Function to load the saved state of the canvas from localStorage
+    function loadCanvasState() {
+        const savedPixels = localStorage.getItem('placedPixels');
+        if (savedPixels) {
+            const pixelData = JSON.parse(savedPixels);
+            pixelData.forEach(pixel => {
+                ctx.fillStyle = pixel.color;
+                ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
+                placedPixels.push(pixel);
+            });
+            console.log('Loaded canvas state:', pixelData); // Debugging log
+        }
     }
 
     // Function to place a pixel on the canvas
@@ -56,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newPixel = {
                     x: gridX,
                     y: gridY,
-                    color: colorPicker.value
+                    color: currentColor
                 };
                 ctx.fillStyle = newPixel.color;
                 ctx.fillRect(gridX, gridY, pixelSize, pixelSize);
@@ -69,9 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pixelsPlaced === 1) {
                     startCooldown(); // Start cooldown when the 1st pixel is placed
                 }
-
-                // Debugging: log the pixel placement
-                console.log('Placed pixel:', newPixel);
             }
         }
     }
@@ -152,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Load the canvas state and render the pixels when the page is loaded
-    renderPixels(); // Make sure we render previously saved pixels
-    loadCooldownState(); // Make sure we load the cooldown state if it's active
+    // Load the canvas state when the page is loaded
+    loadCanvasState();
+    loadCooldownState(); // Load cooldown state as well
 });
