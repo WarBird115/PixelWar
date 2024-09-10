@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Array to keep track of placed pixels
     let placedPixels = JSON.parse(localStorage.getItem('placedPixels')) || [];
 
+    // Debugging: log the current state of placedPixels on load
+    console.log('Loaded placedPixels:', placedPixels);
+
     // Function to render saved pixels
     function renderPixels() {
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
@@ -28,12 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillStyle = pixel.color;
             ctx.fillRect(pixel.x, pixel.y, pixelSize, pixelSize);
         });
+
+        // Debugging: log after rendering
+        console.log('Rendered placedPixels:', placedPixels);
     }
 
     // Function to save the current state of the canvas to localStorage
     function saveCanvasState() {
         const savedPixels = JSON.stringify(placedPixels);
         localStorage.setItem('placedPixels', savedPixels);
+
+        // Debugging: log the save action
+        console.log('Saved placedPixels to localStorage:', savedPixels);
     }
 
     // Function to place a pixel on the canvas
@@ -60,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pixelsPlaced === 1) {
                     startCooldown(); // Start cooldown when the 1st pixel is placed
                 }
+
+                // Debugging: log the pixel placement
+                console.log('Placed pixel:', newPixel);
             }
         }
     }
