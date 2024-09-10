@@ -15,8 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let countdownTimer;
     const pixelSize = 10;
 
-    // Initialize pixel color
-    let currentColor = colorPicker.value;
+    // Set the initial color to black
+    let currentColor = "#000000"; // Default color set to black
+    colorPicker.value = currentColor; // Update the color picker
 
     // Array to keep track of placed pixels
     const placedPixels = [];
@@ -142,29 +143,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Event listener for the access code submission
-submitCodeButton.addEventListener('click', () => {
-    const inputCode = userInput.value;
-    const adminCode = "Itsameamario1";
+    submitCodeButton.addEventListener('click', () => {
+        const inputCode = userInput.value;
+        const adminCode = "Itsameamario1";
 
-    // Check access code without revealing admin code in the console
-    if (inputCode === adminCode) {
-        isCanvasUnlocked = true;
-        overlay.style.display = 'none';
-        wipeCanvasButton.style.display = 'block'; // Show the wipe button for admin
-        loadCanvasState(); // Load the previous state of the canvas
-        console.log('Canvas unlocked! Admin access granted.'); // Debugging log
-    } else if (inputCode === randomAccessCode) {
-        isCanvasUnlocked = true;
-        overlay.style.display = 'none';
-        wipeCanvasButton.style.display = 'none'; // Hide the wipe button for random access
-        loadCanvasState(); // Load the previous state of the canvas
-        console.log('Canvas unlocked! Random access granted.'); // Debugging log
-    } else {
-        alert('Invalid access code. Please try again.');
-    }
-    userInput.value = ''; // Clear the input field after submission
-});
-
+        // Check access code without revealing admin code in the console
+        if (inputCode === adminCode) {
+            isCanvasUnlocked = true;
+            overlay.style.display = 'none';
+            wipeCanvasButton.style.display = 'block'; // Show the wipe button for admin
+            loadCanvasState(); // Load the previous state of the canvas
+            console.log('Canvas unlocked! Admin access granted.'); // Debugging log
+        } else if (inputCode === randomAccessCode) {
+            isCanvasUnlocked = true;
+            overlay.style.display = 'none';
+            wipeCanvasButton.style.display = 'none'; // Hide the wipe button for random access
+            loadCanvasState(); // Load the previous state of the canvas
+            console.log('Canvas unlocked! Random access granted.'); // Debugging log
+        } else {
+            alert('Invalid access code. Please try again.');
+        }
+        userInput.value = ''; // Clear the input field after submission
+    });
 
     // Event listener for the wipe canvas button
     wipeCanvasButton.addEventListener('click', () => {
