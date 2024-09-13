@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("Random Access Code:", randomAccessCode); // Debugging log
 
-    // Load saved cooldown time from local storage
-    let savedCooldownTime = localStorage.getItem('cooldownTime');
-    if (savedCooldownTime) {
-        // Convert saved cooldown time to seconds
-        let secondsLeft = parseInt(savedCooldownTime, 10);
-        if (secondsLeft > 0) {
-            startCooldown(secondsLeft);
+    // Load cooldown time from local storage
+    let cooldownEndTime = localStorage.getItem('cooldownEndTime');
+
+    if (cooldownEndTime) {
+        const timeLeft = (new Date(cooldownEndTime) - new Date()) / 1000; // Calculate time left in seconds
+        if (timeLeft > 0) {
+            startCooldown(timeLeft);
         }
     }
 
@@ -102,21 +102,18 @@ document.addEventListener('DOMContentLoaded', () => {
         cooldown = true;
         let secondsLeft = timeLeft;
 
-        // Save the cooldown time to local storage
-        localStorage.setItem('cooldownTime', secondsLeft);
+        const cooldownEndTime = new Date(new Date().getTime() + secondsLeft * 1000); // Calculate the end time
+        localStorage.setItem('cooldownEndTime', cooldownEndTime); // Store the end time in local storage
 
         countdownTimer = setInterval(() => {
             secondsLeft--;
             updateCountdownDisplay(secondsLeft);
 
-            // Update local storage each second
-            localStorage.setItem('cooldownTime', secondsLeft);
-
             if (secondsLeft <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
+                localStorage.removeItem('cooldownEndTime'); // Clear the end time
                 countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
-                localStorage.removeItem('cooldownTime'); // Clear cooldown time from local storage
             }
         }, 1000);
     }
