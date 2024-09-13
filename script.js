@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Set up canvas and context
     const canvas = document.getElementById('pixelCanvas');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('overlay');
@@ -8,21 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('userInput');
     const wipeCanvasButton = document.getElementById('wipeCanvasButton');
 
+    // Define initial variables
     let isCanvasUnlocked = false;
     let cooldown = false;
     let pixelsPlaced = 0;
     const cooldownTime = 300; // 300 seconds (5 minutes)
     let countdownTimer;
     const pixelSize = 10;
-
-    // Set the initial color to black
     let currentColor = "#000000"; // Default color set to black
     colorPicker.value = currentColor; // Update the color picker
-
-    // Array to keep track of placed pixels
     const placedPixels = [];
 
-    // Get or generate a random access code
+    // Load random access code from local storage or generate a new one
     let randomAccessCode = localStorage.getItem('randomAccessCode');
     if (!randomAccessCode) {
         randomAccessCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
@@ -32,11 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Retrieved random access code from local storage:", randomAccessCode);
     }
 
-    // Load cooldown from local storage
+    // Load cooldown from local storage immediately
     let storedCooldown = localStorage.getItem('userCooldown');
     if (storedCooldown) {
         console.log("Retrieved cooldown from local storage:", storedCooldown);
-        startCooldown(parseInt(storedCooldown));
+        startCooldown(parseInt(storedCooldown)); // Start cooldown with the retrieved value
     } else {
         console.log("No cooldown found in local storage.");
     }
