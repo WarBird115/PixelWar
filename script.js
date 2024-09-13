@@ -27,9 +27,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!randomAccessCode) {
         randomAccessCode = Math.random().toString(36).substring(2, 8); // Generates a 6-character random code
         localStorage.setItem('randomAccessCode', randomAccessCode); // Store the random access code
-        console.log("Generated Random Access Code:", randomAccessCode); // Debugging log
+        console.log("Generated and stored random access code:", randomAccessCode);
     } else {
-        console.log("Retrieved Random Access Code:", randomAccessCode); // Debugging log
+        console.log("Retrieved random access code from local storage:", randomAccessCode);
+    }
+
+    // Load cooldown from local storage
+    let storedCooldown = localStorage.getItem('userCooldown');
+    if (storedCooldown) {
+        console.log("Retrieved cooldown from local storage:", storedCooldown);
+        startCooldown(parseInt(storedCooldown));
+    } else {
+        console.log("No cooldown found in local storage.");
     }
 
     // Function to save the current state of the canvas to Firebase
@@ -56,8 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     placedPixels.push(pixel);
                 });
                 console.log('Loaded canvas state from Firebase.'); // Debugging log
-            } else {
-                console.log('No canvas state found in Firebase.'); // Debugging log
             }
         });
     }
@@ -87,11 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pixelsPlaced === 1) {
                     startCooldown(); // Start cooldown when the 1st pixel is placed
                 }
-            } else {
-                console.log('Pixel already occupied at:', gridX, gridY); // Debugging log
             }
-        } else {
-            console.log('Canvas is locked or cooldown is active.'); // Debugging log
         }
     }
 
@@ -99,21 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function startCooldown(timeLeft = cooldownTime) {
         cooldown = true;
         let secondsLeft = timeLeft;
-        const cooldownEndTime = Date.now() + (timeLeft * 1000); // Calculate end time
+        console.log("Cooldown started with", secondsLeft, "seconds left.");
 
-        localStorage.setItem('cooldownEndTime', cooldownEndTime); // Store end time in local storage
-        console.log('Cooldown started. End time stored in local storage:', cooldownEndTime); // Debugging log
-
+        // Save cooldown to local storage
+        localStorage.setItem('userCooldown', secondsLeft);
         countdownTimer = setInterval(() => {
             secondsLeft--;
             updateCountdownDisplay(secondsLeft);
+            localStorage.setItem('userCooldown', secondsLeft); // Update cooldown in local storage
 
             if (secondsLeft <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
                 countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
-                localStorage.removeItem('cooldownEndTime'); // Remove end time from local storage
-                console.log('Cooldown completed. End time removed from local storage.'); // Debugging log
+                localStorage.removeItem('userCooldown'); // Clear cooldown from local storage
+                console.log("Cooldown ended, cleared from local storage.");
             }
         }, 1000);
     }
@@ -123,24 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = Math.floor(secondsLeft / 60);
         const seconds = secondsLeft % 60;
         countdownDisplay.textContent = `Cooldown: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    }
-
-    // Function to check and load cooldown from local storage
-    function checkCooldown() {
-        const storedEndTime = localStorage.getItem('cooldownEndTime');
-        if (storedEndTime) {
-            const now = Date.now();
-            const timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
-            console.log('Cooldown found in local storage. Time left:', timeLeft); // Debugging log
-
-            if (timeLeft > 0) {
-                startCooldown(timeLeft); // Start cooldown with remaining time
-            } else {
-                console.log('Cooldown has already expired.'); // Debugging log
-            }
-        } else {
-            console.log('No cooldown found in local storage.'); // Debugging log
-        }
     }
 
     // Event listener for mouse clicks on the canvas
@@ -207,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Load the canvas state and check for cooldown when the page loads
+    // Load the canvas state when the page loads
     loadCanvasState();
-    checkCooldown(); // Check for any active cooldown
 });
