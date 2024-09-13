@@ -30,6 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("Random Access Code:", randomAccessCode); // Debugging log
 
+    // Generate or retrieve a unique user ID
+    function getOrCreateUserId() {
+        let userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = Math.random().toString(36).substr(2, 9); // Generate a random ID
+            localStorage.setItem('userId', userId); // Save to local storage
+        }
+        return userId;
+    }
+
+    const userId = getOrCreateUserId(); // Get or create the user's unique ID
+
     // Function to save the current state of the canvas to Firebase
     function saveCanvasState() {
         set(ref(database, 'canvas/pixels'), placedPixels)
@@ -90,18 +102,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to start the cooldown
     function startCooldown(timeLeft = cooldownTime) {
         cooldown = true;
-        let secondsLeft = timeLeft;
+        let cooldownEndTime = Date.now() + timeLeft * 1000;
+
+        // Save cooldown end time in Firebase for this user
+        set(ref(database, `users/${userId}/cooldownEndTime`), cooldownEndTime);
 
         countdownTimer = setInterval(() => {
-            secondsLeft--;
-            updateCountdownDisplay(secondsLeft);
+            const timeRemaining = cooldownEndTime - Date.now();
+            const secondsLeft = Math.floor(timeRemaining / 1000);
 
             if (secondsLeft <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
                 countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
+            } else {
+                updateCountdownDisplay(secondsLeft);
             }
         }, 1000);
+    }
+
+    // Function to load user-specific cooldown from Firebase
+    function loadUserCooldown() {
+        const cooldownRef = ref(database, `users/${userId}/cooldownEndTime`);
+        onValue(cooldownRef, (snapshot) => {
+            const cooldownEndTime = snapshot.val();
+
+            if (cooldownEndTime && Date.now() < cooldownEndTime) {
+                const secondsLeft = Math.floor((cooldownEndTime - Date.now()) / 1000);
+                startCooldown(secondsLeft);
+            }
+        });
     }
 
     // Function to update the countdown display
@@ -175,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Load the canvas state when the page loads
+    // Load the canvas state and user cooldown when the page loads
     loadCanvasState();
+    loadUserCooldown();
 });
