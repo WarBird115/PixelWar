@@ -30,39 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log("Random Access Code:", randomAccessCode); // Debugging log
 
-    // Generate a unique user ID if it doesn't exist in localStorage
-    let userId = localStorage.getItem('userId');
-    if (!userId) {
-        userId = Math.random().toString(36).substring(2);
-        localStorage.setItem('userId', userId);
-    }
-
-    // Function to save cooldown to Firebase
-    function saveCooldownToFirebase(secondsLeft) {
-        set(ref(database, `users/${userId}/cooldown`), {
-            remainingTime: secondsLeft,
-            timestamp: Date.now()
-        }).then(() => {
-            console.log("Cooldown saved to Firebase.");
-        }).catch((error) => {
-            console.error("Error saving cooldown:", error);
-        });
-    }
-
-    // Function to retrieve cooldown from Firebase
-    function loadCooldownFromFirebase() {
-        const userCooldownRef = ref(database, `users/${userId}/cooldown`);
-        onValue(userCooldownRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const timePassed = Math.floor((Date.now() - data.timestamp) / 1000);
-                const remainingTime = data.remainingTime - timePassed;
-
-                if (remainingTime > 0) {
-                    startCooldown(remainingTime);
-                }
-            }
-        });
+    // Load saved cooldown time from local storage
+    let savedCooldownTime = localStorage.getItem('cooldownTime');
+    if (savedCooldownTime) {
+        // Convert saved cooldown time to seconds
+        let secondsLeft = parseInt(savedCooldownTime, 10);
+        if (secondsLeft > 0) {
+            startCooldown(secondsLeft);
+        }
     }
 
     // Function to save the current state of the canvas to Firebase
@@ -127,17 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
         cooldown = true;
         let secondsLeft = timeLeft;
 
+        // Save the cooldown time to local storage
+        localStorage.setItem('cooldownTime', secondsLeft);
+
         countdownTimer = setInterval(() => {
             secondsLeft--;
             updateCountdownDisplay(secondsLeft);
 
-            // Save the current countdown to Firebase
-            saveCooldownToFirebase(secondsLeft);
+            // Update local storage each second
+            localStorage.setItem('cooldownTime', secondsLeft);
 
             if (secondsLeft <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
                 countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
+                localStorage.removeItem('cooldownTime'); // Clear cooldown time from local storage
             }
         }, 1000);
     }
@@ -197,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.display = 'none';
             wipeCanvasButton.style.display = 'none'; // Hide the wipe button for random access
             loadCanvasState(); // Load the previous state of the canvas
-            loadCooldownFromFirebase(); // Load cooldown for the user
             console.log('Canvas unlocked! Random access granted.'); // Debugging log
         } else {
             alert('Invalid access code. Please try again.');
