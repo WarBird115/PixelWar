@@ -30,13 +30,38 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Retrieved random access code from local storage:", randomAccessCode);
     }
 
-    // Load cooldown from local storage immediately
-    let storedCooldown = localStorage.getItem('userCooldown');
-    if (storedCooldown) {
-        console.log("Retrieved cooldown from local storage:", storedCooldown);
-        startCooldown(parseInt(storedCooldown)); // Start cooldown with the retrieved value
-    } else {
-        console.log("No cooldown found in local storage.");
+    // Load cooldown from Firebase
+    function loadCooldownFromFirebase(accessCode) {
+        const cooldownRef = ref(database, `cooldowns/${accessCode}`);
+        onValue(cooldownRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const currentTime = Date.now();
+                const elapsedTime = Math.floor((currentTime - data.lastGeneratedTime) / 1000); // seconds elapsed
+                const remainingTime = data.cooldownTime - elapsedTime;
+
+                if (remainingTime > 0) {
+                    startCooldown(remainingTime); // Start cooldown with the remaining time
+                } else {
+                    console.log("Cooldown has expired.");
+                }
+            } else {
+                console.log("No cooldown data found for this access code.");
+            }
+        });
+    }
+
+    // Function to save the current cooldown state to Firebase
+    function saveCooldownToFirebase(accessCode, timeLeft) {
+        const cooldownRef = ref(database, `cooldowns/${accessCode}`);
+        set(cooldownRef, {
+            cooldownTime: timeLeft,
+            lastGeneratedTime: Date.now() // Store the current time
+        }).then(() => {
+            console.log('Cooldown data saved to Firebase.');
+        }).catch((error) => {
+            console.error('Error saving cooldown data:', error);
+        });
     }
 
     // Function to save the current state of the canvas to Firebase
@@ -102,19 +127,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let secondsLeft = timeLeft;
         console.log("Cooldown started with", secondsLeft, "seconds left.");
 
-        // Save cooldown to local storage
-        localStorage.setItem('userCooldown', secondsLeft);
+        // Save the cooldown to Firebase
+        saveCooldownToFirebase(randomAccessCode, secondsLeft);
+
         countdownTimer = setInterval(() => {
             secondsLeft--;
             updateCountdownDisplay(secondsLeft);
-            localStorage.setItem('userCooldown', secondsLeft); // Update cooldown in local storage
+            saveCooldownToFirebase(randomAccessCode, secondsLeft); // Update cooldown in Firebase
 
             if (secondsLeft <= 0) {
                 clearInterval(countdownTimer);
                 cooldown = false;
                 countdownDisplay.textContent = "Cooldown: 0:00"; // Reset display
-                localStorage.removeItem('userCooldown'); // Clear cooldown from local storage
-                console.log("Cooldown ended, cleared from local storage.");
+                console.log("Cooldown ended.");
             }
         }, 1000);
     }
@@ -169,12 +194,14 @@ document.addEventListener('DOMContentLoaded', () => {
             wipeCanvasButton.style.display = 'block'; // Show the wipe button for admin
             loadCanvasState(); // Load the previous state of the canvas
             console.log('Canvas unlocked! Admin access granted.'); // Debugging log
+            loadCooldownFromFirebase(adminCode); // Load cooldown for admin
         } else if (inputCode === randomAccessCode) {
             isCanvasUnlocked = true;
             overlay.style.display = 'none';
             wipeCanvasButton.style.display = 'none'; // Hide the wipe button for random access
             loadCanvasState(); // Load the previous state of the canvas
             console.log('Canvas unlocked! Random access granted.'); // Debugging log
+            loadCooldownFromFirebase(randomAccessCode); // Load cooldown for random access
         } else {
             alert('Invalid access code. Please try again.');
         }
