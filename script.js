@@ -4,6 +4,10 @@ const cooldownTimer = document.getElementById('cooldown-timer');
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 
+// Passwords
+const adminPassword = "Itsameamario1"; // Admin password
+let userPassword = "12345"; // Temporary user password
+
 // Check for existing cooldown in localStorage
 const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
 if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
@@ -12,6 +16,11 @@ if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
 }
 
 canvas.addEventListener('click', (e) => {
+  if (!isUserAuthenticated) {
+    alert('You must enter the correct password to place a pixel!');
+    return;
+  }
+  
   if (cooldownEndTime && Date.now() < cooldownEndTime) {
     alert('You are still on cooldown!');
     return;
@@ -51,3 +60,36 @@ function updateCooldownTimer() {
     }
   }, 1000);
 }
+
+// Authentication
+let isUserAuthenticated = false;
+
+document.getElementById("submitPassword").addEventListener("click", function() {
+  const inputPassword = document.getElementById("passwordInput").value;
+
+  if (inputPassword === adminPassword) {
+    alert("Welcome, Admin!");
+    isUserAuthenticated = true;
+    enableCanvasInteraction(true);
+  } else if (inputPassword === userPassword) {
+    alert("Welcome, User!");
+    isUserAuthenticated = true;
+    enableCanvasInteraction(false);
+  } else {
+    alert("Incorrect password!");
+  }
+});
+
+function enableCanvasInteraction(isAdmin) {
+  // Enable pixel placement
+  canvas.style.pointerEvents = 'auto';
+  // Show 'Clear Canvas' button if admin
+  if (isAdmin) {
+    document.getElementById("clearCanvasButton").style.display = 'block';
+  }
+}
+
+// Clear Canvas Functionality
+document.getElementById("clearCanvasButton").addEventListener("click", function() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
