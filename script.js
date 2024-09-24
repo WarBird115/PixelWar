@@ -16,7 +16,7 @@ if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
 }
 
 // Setting up pixel size
-const pixelSize = 5; // Size of the pixel
+const pixelSize = 50; // Size of the pixel
 
 canvas.addEventListener('click', (e) => {
   if (!isUserAuthenticated) {
