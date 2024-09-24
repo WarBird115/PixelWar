@@ -15,6 +15,9 @@ if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
   updateCooldownTimer();
 }
 
+// Setting up pixel size
+const pixelSize = 5; // Size of the pixel
+
 canvas.addEventListener('click', (e) => {
   if (!isUserAuthenticated) {
     alert('You must enter the correct password to place a pixel!');
@@ -32,7 +35,6 @@ canvas.addEventListener('click', (e) => {
   const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
   // Draw a pixel at the clicked position
-  const pixelSize = 5; // Size of the pixel
   ctx.fillStyle = document.getElementById('colorPicker').value; // Get color from the color picker
   ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Draw larger pixel
 
