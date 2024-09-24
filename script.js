@@ -6,7 +6,7 @@ let cooldownEndTime = null;
 
 // Passwords
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = "12345"; // Regular user password
+let userPassword = "12345"; // Temporary user password
 
 // Check for existing cooldown in localStorage
 const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
@@ -14,9 +14,6 @@ if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
   cooldownEndTime = parseInt(savedCooldownEndTime, 10);
   updateCooldownTimer();
 }
-
-// Default color for pixels
-let currentColor = '#000000'; // Black
 
 canvas.addEventListener('click', (e) => {
   if (!isUserAuthenticated) {
@@ -34,17 +31,13 @@ canvas.addEventListener('click', (e) => {
   const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
   const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
-  // Draw a larger pixel at the clicked position
-  ctx.fillStyle = currentColor;
-  ctx.fillRect(x * 4, y * 4, 4, 4); // Each pixel is now 4x4
+  // Draw a pixel at the clicked position
+  const pixelSize = 5; // Size of the pixel
+  ctx.fillStyle = document.getElementById('colorPicker').value; // Get color from the color picker
+  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Draw larger pixel
 
   // Start the cooldown
   startCooldown();
-});
-
-// Color Picker Event
-document.getElementById("colorPicker").addEventListener("input", function() {
-  currentColor = this.value; // Update current color based on color picker
 });
 
 function startCooldown() {
