@@ -91,7 +91,7 @@ function enableCanvasInteraction(isAdmin) {
   canvas.style.pointerEvents = 'auto';
   // Show 'Clear Canvas' button if admin
   if (isAdmin) {
-    document.getElementById("clearCanvasButton").style.display = 'block';
+    document.getElementById("clearCanvasButton").style.display = 'inline-block'; // Make it inline-block to stay next to the color picker
   }
 }
 
