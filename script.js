@@ -34,6 +34,9 @@ canvas.addEventListener('click', (e) => {
   const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
   const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
+  // Log the position for debugging
+  console.log(`Placing pixel at: (${x}, ${y})`); // Debugging line
+
   // Draw a pixel at the clicked position
   ctx.fillStyle = document.getElementById('colorPicker').value; // Get color from the color picker
   ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Draw larger pixel
