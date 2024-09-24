@@ -16,7 +16,7 @@ if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
 }
 
 // Setting up pixel size
-const pixelSize = 50; // Size of the pixel
+const pixelSize = 5; // Size of the pixel
 
 canvas.addEventListener('click', (e) => {
   if (!isUserAuthenticated) {
@@ -39,7 +39,12 @@ canvas.addEventListener('click', (e) => {
 
   // Draw a pixel at the clicked position
   ctx.fillStyle = document.getElementById('colorPicker').value; // Get color from the color picker
+
+  // Adjust for pixel size
   ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Draw larger pixel
+
+  // Log the color being used
+  console.log(`Color being used: ${ctx.fillStyle}`); // Debugging line
 
   // Start the cooldown
   startCooldown();
