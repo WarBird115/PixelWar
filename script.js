@@ -50,6 +50,11 @@ function startCooldown() {
 
 function updateCooldownTimer() {
   const interval = setInterval(() => {
+    if (!cooldownEndTime) {
+      clearInterval(interval);
+      return;
+    }
+
     const remainingTime = cooldownEndTime - Date.now();
     if (remainingTime > 0) {
       const minutes = Math.floor(remainingTime / 1000 / 60);
