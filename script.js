@@ -1,27 +1,33 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+const colorPicker = document.getElementById('colorPicker');
+const clearCanvasButton = document.getElementById('clearCanvasButton');
 
-// Pixel size configuration
-const pixelSize = 10; // Testing larger pixels for visibility
+// Test large pixel size to easily see if it works
+const pixelSize = 10;
 
-// Initial canvas fill to confirm rendering
-ctx.fillStyle = '#f0f0f0'; // Light gray background
-ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill canvas with background color
+// Initial background to ensure rendering
+ctx.fillStyle = '#f0f0f0'; // Light background for visibility
+ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-// Test pixel placement on click
+// Clear canvas functionality
+clearCanvasButton.addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#f0f0f0';
+  ctx.fillRect(0, 0, canvas.width, canvas.height); // Reset to light background
+});
+
+// Test drawing with simple mouse click
 canvas.addEventListener('click', (e) => {
-  // Get the mouse position relative to the canvas
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
   const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
-  // Log the calculated position for debugging
-  console.log(`Placing test pixel at: (${x}, ${y})`);
+  console.log(`Placing pixel at: (${x}, ${y})`);
 
-  // Draw a large test rectangle at the clicked position
-  ctx.fillStyle = '#ff0000'; // Red color for visibility
+  // Draw using the selected color from color picker
+  ctx.fillStyle = colorPicker.value;
   ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
 
-  // Log the color and pixel placement
-  console.log(`Color being used: ${ctx.fillStyle}`);
+  console.log(`Color used: ${ctx.fillStyle}`);
 });
