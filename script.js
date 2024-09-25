@@ -1,110 +1,27 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const cooldownTimer = document.getElementById('cooldown-timer');
-const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
-let cooldownEndTime = null;
 
-// Passwords
-const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = "12345"; // Temporary user password
+// Pixel size configuration
+const pixelSize = 10; // Testing larger pixels for visibility
 
-// Check for existing cooldown in localStorage
-const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
-if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
-  cooldownEndTime = parseInt(savedCooldownEndTime, 10);
-  updateCooldownTimer();
-}
+// Initial canvas fill to confirm rendering
+ctx.fillStyle = '#f0f0f0'; // Light gray background
+ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill canvas with background color
 
-// Pixel size configuration (increased size for testing)
-const pixelSize = 10; // Test with larger pixel size for visibility
-
-// Debugging: Fill entire canvas to test drawing
-ctx.fillStyle = '#f0f0f0';
-ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the whole canvas in a light grey color for visibility
-
+// Test pixel placement on click
 canvas.addEventListener('click', (e) => {
-  if (!isUserAuthenticated) {
-    alert('You must enter the correct password to place a pixel!');
-    return;
-  }
-
-  if (cooldownEndTime && Date.now() < cooldownEndTime) {
-    alert('You are still on cooldown!');
-    return;
-  }
-
   // Get the mouse position relative to the canvas
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
   const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
-  // Log the position for debugging
-  console.log(`Placing pixel at: (${x}, ${y})`); // Debugging line
+  // Log the calculated position for debugging
+  console.log(`Placing test pixel at: (${x}, ${y})`);
 
-  // Draw a larger pixel at the clicked position
-  ctx.fillStyle = document.getElementById('colorPicker').value || '#000000'; // Use color from color picker or default black
-  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Test with larger pixels
+  // Draw a large test rectangle at the clicked position
+  ctx.fillStyle = '#ff0000'; // Red color for visibility
+  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
 
-  // Log the color being used
-  console.log(`Color being used: ${ctx.fillStyle}`); // Debugging line
-
-  // Start the cooldown
-  startCooldown();
-});
-
-function startCooldown() {
-  cooldownEndTime = Date.now() + cooldownDuration;
-  localStorage.setItem('cooldownEndTime', cooldownEndTime);
-  updateCooldownTimer();
-}
-
-function updateCooldownTimer() {
-  const interval = setInterval(() => {
-    const remainingTime = cooldownEndTime - Date.now();
-    if (remainingTime > 0) {
-      const minutes = Math.floor(remainingTime / 1000 / 60);
-      const seconds = Math.floor((remainingTime / 1000) % 60);
-      cooldownTimer.textContent = `Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    } else {
-      clearInterval(interval);
-      cooldownEndTime = null;
-      cooldownTimer.textContent = 'You can place a pixel now!';
-      localStorage.removeItem('cooldownEndTime');
-    }
-  }, 1000);
-}
-
-// Authentication
-let isUserAuthenticated = false;
-
-document.getElementById("submitPassword").addEventListener("click", function() {
-  const inputPassword = document.getElementById("passwordInput").value;
-
-  if (inputPassword === adminPassword) {
-    alert("Welcome, Admin!");
-    isUserAuthenticated = true;
-    enableCanvasInteraction(true);
-  } else if (inputPassword === userPassword) {
-    alert("Welcome, User!");
-    isUserAuthenticated = true;
-    enableCanvasInteraction(false);
-  } else {
-    alert("Incorrect password!");
-  }
-});
-
-function enableCanvasInteraction(isAdmin) {
-  // Enable pixel placement
-  canvas.style.pointerEvents = 'auto';
-  // Show 'Clear Canvas' button if admin
-  if (isAdmin) {
-    document.getElementById("clearCanvasButton").style.display = 'inline-block'; // Make it inline-block to stay next to the color picker
-  }
-}
-
-// Clear Canvas Functionality
-document.getElementById("clearCanvasButton").addEventListener("click", function() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#f0f0f0'; // Redraw the background color for testing
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Log the color and pixel placement
+  console.log(`Color being used: ${ctx.fillStyle}`);
 });
