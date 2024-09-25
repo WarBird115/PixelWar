@@ -15,15 +15,19 @@ if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
   updateCooldownTimer();
 }
 
-// Pixel size configuration
-const pixelSize = 5; // Size of each pixel (increase if necessary)
+// Pixel size configuration (increased size for testing)
+const pixelSize = 10; // Test with larger pixel size for visibility
+
+// Debugging: Fill entire canvas to test drawing
+ctx.fillStyle = '#f0f0f0';
+ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the whole canvas in a light grey color for visibility
 
 canvas.addEventListener('click', (e) => {
   if (!isUserAuthenticated) {
     alert('You must enter the correct password to place a pixel!');
     return;
   }
-  
+
   if (cooldownEndTime && Date.now() < cooldownEndTime) {
     alert('You are still on cooldown!');
     return;
@@ -37,11 +41,9 @@ canvas.addEventListener('click', (e) => {
   // Log the position for debugging
   console.log(`Placing pixel at: (${x}, ${y})`); // Debugging line
 
-  // Draw a pixel at the clicked position
-  ctx.fillStyle = document.getElementById('colorPicker').value; // Get color from the color picker
-
-  // Draw larger pixel
-  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Draw a larger pixel
+  // Draw a larger pixel at the clicked position
+  ctx.fillStyle = document.getElementById('colorPicker').value || '#000000'; // Use color from color picker or default black
+  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Test with larger pixels
 
   // Log the color being used
   console.log(`Color being used: ${ctx.fillStyle}`); // Debugging line
@@ -103,4 +105,6 @@ function enableCanvasInteraction(isAdmin) {
 // Clear Canvas Functionality
 document.getElementById("clearCanvasButton").addEventListener("click", function() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#f0f0f0'; // Redraw the background color for testing
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 });
