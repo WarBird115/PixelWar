@@ -3,11 +3,11 @@ const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
 const clearCanvasButton = document.getElementById('clearCanvasButton');
 
-// Test large pixel size to easily see if it works
+// Set a fixed pixel size for drawing
 const pixelSize = 10;
 
-// Initial background to ensure rendering
-ctx.fillStyle = '#f0f0f0'; // Light background for visibility
+// Initial background to ensure visibility
+ctx.fillStyle = '#f0f0f0'; // Light background for better visibility
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 // Clear canvas functionality
@@ -17,17 +17,17 @@ clearCanvasButton.addEventListener('click', () => {
   ctx.fillRect(0, 0, canvas.width, canvas.height); // Reset to light background
 });
 
-// Test drawing with simple mouse click
+// Test drawing with a simple mouse click
 canvas.addEventListener('click', (e) => {
   const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
-  const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
+  const x = e.clientX - rect.left;  // No scaling, direct position
+  const y = e.clientY - rect.top;   // No scaling, direct position
 
   console.log(`Placing pixel at: (${x}, ${y})`);
 
-  // Draw using the selected color from color picker
+  // Draw a pixel using the selected color from the color picker
   ctx.fillStyle = colorPicker.value;
-  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+  ctx.fillRect(x, y, pixelSize, pixelSize);  // Direct pixel placement
 
   console.log(`Color used: ${ctx.fillStyle}`);
 });
