@@ -4,9 +4,23 @@ const cooldownTimer = document.getElementById('cooldown-timer');
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 
-// Passwords
-const adminPassword = "Itsameamario1"; // Admin password
-const userPassword = "12345"; // Regular user password
+// Admin Password
+const adminPassword = "Itsameamario1";
+
+// Regular User Password (generated dynamically)
+function generateWeeklyPassword() {
+  const currentWeek = getWeekNumber(new Date());
+  const basePassword = 'pixelwars'; // Base for the password
+  return `${basePassword}${currentWeek}`;
+}
+
+function getWeekNumber(d) {
+  const oneJan = new Date(d.getFullYear(), 0, 1);
+  const numberOfDays = Math.floor((d - oneJan) / (24 * 60 * 60 * 1000));
+  return Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
+}
+
+let currentWeekPassword = generateWeeklyPassword();
 
 // Check for existing cooldown in localStorage
 const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
@@ -26,19 +40,13 @@ canvas.addEventListener('click', (e) => {
     return;
   }
 
-  // Get the mouse position relative to the canvas
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
   const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
-  // Draw the pixel at the clicked position
-  ctx.fillStyle = selectedColor;
-  ctx.fillRect(x, y, 10, 10); // Adjusted pixel size to 10x10 for visibility
+  ctx.fillStyle = colorPicker.value;
+  ctx.fillRect(x, y, 10, 10); // Larger pixel size
 
-  console.log(`Placing pixel at: (${x}, ${y})`);
-  console.log(`Color being used: ${selectedColor}`);
-
-  // Start the cooldown
   startCooldown();
 });
 
@@ -50,11 +58,6 @@ function startCooldown() {
 
 function updateCooldownTimer() {
   const interval = setInterval(() => {
-    if (!cooldownEndTime) {
-      clearInterval(interval);
-      return;
-    }
-
     const remainingTime = cooldownEndTime - Date.now();
     if (remainingTime > 0) {
       const minutes = Math.floor(remainingTime / 1000 / 60);
@@ -71,6 +74,7 @@ function updateCooldownTimer() {
 
 // Authentication
 let isUserAuthenticated = false;
+
 document.getElementById("submitPassword").addEventListener("click", function() {
   const inputPassword = document.getElementById("passwordInput").value;
 
@@ -78,7 +82,8 @@ document.getElementById("submitPassword").addEventListener("click", function() {
     alert("Welcome, Admin!");
     isUserAuthenticated = true;
     enableCanvasInteraction(true);
-  } else if (inputPassword === userPassword) {
+    displayWeeklyPassword(); // Display weekly password for admin
+  } else if (inputPassword === currentWeekPassword) {
     alert("Welcome, User!");
     isUserAuthenticated = true;
     enableCanvasInteraction(false);
@@ -99,10 +104,11 @@ document.getElementById("clearCanvasButton").addEventListener("click", function(
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
-// Color picker functionality
-const colorPicker = document.getElementById('colorPicker');
-let selectedColor = '#000000'; // Default to black
-
-colorPicker.addEventListener('change', (e) => {
-  selectedColor = e.target.value;
-});
+// Display weekly password for admin
+function displayWeeklyPassword() {
+  const adminMessage = document.createElement('div');
+  adminMessage.textContent = `Weekly User Password: ${currentWeekPassword}`;
+  adminMessage.style.marginTop = '10px';
+  adminMessage.style.color = '#00FF00'; // Green color for admin message
+  document.body.appendChild(adminMessage);
+}
