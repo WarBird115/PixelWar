@@ -8,17 +8,16 @@
 </head>
 <body>
   <h1>Pixel Wars</h1>
+
   <canvas id="canvas" width="400" height="400"></canvas>
-  <div id="colorPickerContainer">
-    <label for="colorPicker">Choose a color:</label>
-    <input type="color" id="colorPicker" value="#000000">
-  </div>
-  <div id="passwordContainer">
-    <input type="password" id="passwordInput" placeholder="Enter password">
-    <button id="submitPassword">Submit</button>
-  </div>
+
+  <input type="color" id="colorPicker">
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <button id="submitPassword">Submit</button>
   <button id="clearCanvasButton" style="display: none;">Clear Canvas</button>
+
   <div id="cooldown-timer">You can place a pixel now!</div>
+
   <div id="welcomeText">
     <h2>Welcome to Pixel Wars!</h2>
     <p>This space is all about collaboration and creativity. Go wild, be quirky, or team up with others to create something amazing. The image you create here will become our server banner at the end of every month. You've got one pixel every 5 minutes, so make it count!</p>
@@ -29,6 +28,7 @@
     </ul>
     <p>Game on and happy pixeling!</p>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
