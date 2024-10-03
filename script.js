@@ -2,7 +2,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = null; // User password, no longer stored in localStorage
+let userPassword = null; // User password in memory only
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 
@@ -75,7 +75,8 @@ document.getElementById("submitPassword").addEventListener("click", function () 
         alert("Welcome, Admin!");
         isUserAuthenticated = true;
         enableCanvasInteraction(true);
-        // Show the weekly user password when admin logs in
+        // Generate and show the user password for admin
+        userPassword = generateUserPassword();
         document.getElementById("weeklyUserPassword").textContent = `Weekly User Password: ${userPassword}`;
     } else {
         alert("Incorrect password!");
@@ -90,7 +91,7 @@ function enableCanvasInteraction(isAdmin) {
     }
 }
 
-// Weekly password generation without using localStorage
+// Weekly password generation (held in memory, not saved anywhere)
 function setWeeklyPassword() {
     const now = new Date();
     const currentWeekNumber = getWeekNumber(now);
@@ -99,11 +100,7 @@ function setWeeklyPassword() {
     // Generate a new password if we're in a new week
     if (!lastGeneratedWeek || currentWeekNumber !== parseInt(lastGeneratedWeek, 10)) {
         userPassword = generateUserPassword();
-        sessionStorage.setItem('weeklyUserPassword', userPassword);
-        sessionStorage.setItem('lastGeneratedWeek', currentWeekNumber);
-    } else {
-        // Use the password stored in session memory for the current week
-        userPassword = sessionStorage.getItem('weeklyUserPassword');
+        sessionStorage.setItem('lastGeneratedWeek', currentWeekNumber); // Only week number is stored
     }
 }
 
@@ -114,5 +111,5 @@ function getWeekNumber(d) {
     return Math.ceil((d.getDay() + 1 + numberOfDays) / 7);
 }
 
-// Initialize the password system
+// Initialize the password system (held in memory, not saved anywhere)
 setWeeklyPassword();
