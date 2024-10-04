@@ -96,7 +96,7 @@ canvas.addEventListener('click', (e) => {
 
     // Draw the pixel at the clicked position
     ctx.fillStyle = currentColor;
-    ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
+    ctx.fillRect(x, y, 50, 50); // Use 10x10 size for larger pixels
     console.log(`Placing pixel at: (${x}, ${y})`);
     console.log(`Color being used: ${currentColor}`);
 
