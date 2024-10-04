@@ -6,7 +6,7 @@ let userPassword = null; // User password in memory only
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 
-// Utility function to generate random user password
+// Utility function to generate random user password (5 characters)
 function generateUserPassword() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let password = '';
@@ -16,11 +16,36 @@ function generateUserPassword() {
     return password;
 }
 
-// Check for existing cooldown in session memory (not stored)
-const savedCooldownEndTime = sessionStorage.getItem('cooldownEndTime');
-if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
-    cooldownEndTime = parseInt(savedCooldownEndTime, 10);
-    updateCooldownTimer();
+// Weekly password generation (held in session, not local storage)
+function setWeeklyPassword() {
+    const now = new Date();
+    const currentWeekNumber = getWeekNumber(now);
+    const lastGeneratedWeek = sessionStorage.getItem('lastGeneratedWeek');
+    const storedUserPassword = sessionStorage.getItem('userPassword');
+
+    // Generate a new password if we're in a new week
+    if (!lastGeneratedWeek || currentWeekNumber !== parseInt(lastGeneratedWeek, 10)) {
+        userPassword = generateUserPassword();
+        sessionStorage.setItem('lastGeneratedWeek', currentWeekNumber);
+        sessionStorage.setItem('userPassword', userPassword); // Store weekly password only in session
+    } else {
+        userPassword = storedUserPassword;
+    }
+}
+
+// Helper function to get the current week number of the year
+function getWeekNumber(d) {
+    const oneJan = new Date(d.getFullYear(), 0, 1);
+    const numberOfDays = Math.floor((d - oneJan) / (24 * 60 * 60 * 1000));
+    return Math.ceil((d.getDay() + 1 + numberOfDays) / 7);
+}
+
+// Enable interaction with the canvas for authenticated users
+function enableCanvasInteraction(isAdmin) {
+    canvas.style.pointerEvents = 'auto';
+    if (isAdmin) {
+        document.getElementById("clearCanvasButton").style.display = 'block';
+    }
 }
 
 canvas.addEventListener('click', (e) => {
@@ -68,6 +93,7 @@ function updateCooldownTimer() {
 
 let isUserAuthenticated = false;
 
+// Handle admin password submission
 document.getElementById("submitPassword").addEventListener("click", function () {
     const inputPassword = document.getElementById("passwordInput").value;
 
@@ -75,41 +101,18 @@ document.getElementById("submitPassword").addEventListener("click", function () 
         alert("Welcome, Admin!");
         isUserAuthenticated = true;
         enableCanvasInteraction(true);
-        // Generate and show the user password for admin
-        userPassword = generateUserPassword();
+        // Show the weekly password for admin
+        setWeeklyPassword();
         document.getElementById("weeklyUserPassword").textContent = `Weekly User Password: ${userPassword}`;
     } else {
         alert("Incorrect password!");
     }
 });
 
-// Enable interaction with the canvas
-function enableCanvasInteraction(isAdmin) {
-    canvas.style.pointerEvents = 'auto';
-    if (isAdmin) {
-        document.getElementById("clearCanvasButton").style.display = 'block';
-    }
-}
+// Remove irrelevant entries from localStorage and sessionStorage
+sessionStorage.removeItem('randomaccesscode');
+localStorage.removeItem('randomaccesscode');
+localStorage.removeItem('weeklyuserpassword');
 
-// Weekly password generation (held in memory, not saved anywhere)
-function setWeeklyPassword() {
-    const now = new Date();
-    const currentWeekNumber = getWeekNumber(now);
-    const lastGeneratedWeek = sessionStorage.getItem('lastGeneratedWeek');
-
-    // Generate a new password if we're in a new week
-    if (!lastGeneratedWeek || currentWeekNumber !== parseInt(lastGeneratedWeek, 10)) {
-        userPassword = generateUserPassword();
-        sessionStorage.setItem('lastGeneratedWeek', currentWeekNumber); // Only week number is stored
-    }
-}
-
-// Helper function to get the current week number of the year
-function getWeekNumber(d) {
-    const oneJan = new Date(d.getFullYear(), 0, 1);
-    const numberOfDays = Math.floor((d - oneJan) / (24 * 60 * 60 * 1000));
-    return Math.ceil((d.getDay() + 1 + numberOfDays) / 7);
-}
-
-// Initialize the password system (held in memory, not saved anywhere)
+// Set weekly password on page load
 setWeeklyPassword();
