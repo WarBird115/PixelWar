@@ -96,7 +96,7 @@ canvas.addEventListener('click', (e) => {
 
     // Draw the pixel at the clicked position
     ctx.fillStyle = currentColor;
-    ctx.fillRect(x, y, 50, 50); // Use 10x10 size for larger pixels
+    ctx.fillRect(x, y, 50, 50); // Use 50x50 size for larger pixels
     console.log(`Placing pixel at: (${x}, ${y})`);
     console.log(`Color being used: ${currentColor}`);
 
@@ -140,7 +140,7 @@ function enableCanvasInteraction(isAdmin) {
 // Function for the admin to see the weekly user password
 function displayAdminPassword() {
     const passwordDisplay = document.createElement('p');
-    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
+    passwordDisplay.textContent = `Current User Password: ${userPassword}`;
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
 }
