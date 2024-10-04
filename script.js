@@ -3,6 +3,7 @@ const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
 let userPassword = null; // User password in memory only
+let selectedColor = "#000000"; // Default color
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 
@@ -107,6 +108,11 @@ document.getElementById("submitPassword").addEventListener("click", function () 
     } else {
         alert("Incorrect password!");
     }
+});
+
+// Handle color picker interaction
+document.getElementById("colorPicker").addEventListener("input", function () {
+    selectedColor = this.value;
 });
 
 // Remove irrelevant entries from localStorage and sessionStorage

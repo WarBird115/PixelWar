@@ -12,16 +12,13 @@
   <canvas id="canvas" width="400" height="400"></canvas>
 
   <input type="color" id="colorPicker">
-  
-  <div id="passwordSection">
-    <input type="password" id="passwordInput" placeholder="Enter Password">
-    <button id="submitPassword">Submit</button>
-    <p id="weeklyUserPassword"></p> <!-- This will show the weekly password -->
-  </div>
-
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <button id="submitPassword">Submit</button>
   <button id="clearCanvasButton" style="display: none;">Clear Canvas</button>
 
   <div id="cooldown-timer">You can place a pixel now!</div>
+
+  <div id="weeklyUserPassword"></div> <!-- This is where the user password will appear for admin -->
 
   <div id="welcomeText">
     <h2>Welcome to Pixel Wars!</h2>
@@ -34,6 +31,6 @@
     <p>Game on and happy pixeling!</p>
   </div>
 
-  <script src="script.js"></script> <!-- Ensure this is at the bottom -->
+  <script src="script.js"></script>
 </body>
 </html>
