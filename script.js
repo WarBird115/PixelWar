@@ -11,7 +11,7 @@ let isUserAuthenticated = false; // Track user authentication status
 function generateRandomPassword() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let password = '';
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 5; i++) { // Generate a 5-character password
         password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return password;
@@ -140,7 +140,7 @@ function enableCanvasInteraction(isAdmin) {
 // Function for the admin to see the weekly user password
 function displayAdminPassword() {
     const passwordDisplay = document.createElement('p');
-    passwordDisplay.textContent = `Current User Password: ${userPassword}`;
+    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
 }
