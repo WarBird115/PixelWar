@@ -2,10 +2,13 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = ""; // Randomly generated user password
+let userPassword = generateRandomPassword(); // Randomly generated user password
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
+
+// Generate random password immediately
+console.log(`Generated User Password: ${userPassword}`);
 
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
@@ -27,11 +30,13 @@ function updateWeeklyPassword() {
     // If it's already Sunday at 00:00, generate the password right away
     if (now.getDay() === 0 && now.getHours() === 0) {
         userPassword = generateRandomPassword();
+        console.log(`Updated User Password on Sunday: ${userPassword}`);
     }
 
     // Set a timeout to update the password at the next Sunday 00:00
     setTimeout(() => {
         userPassword = generateRandomPassword();
+        console.log(`New User Password for the week: ${userPassword}`);
         updateWeeklyPassword(); // Schedule the next update for the following week
     }, timeUntilNextSunday);
 }
@@ -96,7 +101,7 @@ canvas.addEventListener('click', (e) => {
 
     // Draw the pixel at the clicked position
     ctx.fillStyle = currentColor;
-    ctx.fillRect(x, y, 50, 50); // Use 50x50 size for larger pixels
+    ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
     console.log(`Placing pixel at: (${x}, ${y})`);
     console.log(`Color being used: ${currentColor}`);
 
@@ -143,6 +148,7 @@ function displayAdminPassword() {
     passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
+    console.log(`Displaying User Password: ${userPassword}`);
 }
 
 // Clear Canvas Functionality
