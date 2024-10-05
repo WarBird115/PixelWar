@@ -1,4 +1,23 @@
-// Make sure this is loaded after Firebase is initialized in the HTML
+// Importing Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+// Your Firebase configuration
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+// Setup canvas and variables
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
@@ -96,36 +115,6 @@ colorPicker.addEventListener('input', function() {
     currentColor = colorPicker.value;
 });
 
-// Function to set pixel data in the database
-function setPixelData(x, y, color) {
-    const pixelRef = db.ref('pixels/' + x + '-' + y);
-    pixelRef.set({
-        color: color
-    });
-}
-
-// Function to get pixel data from the database
-function getPixelData() {
-    const pixelsRef = db.ref('pixels/');
-    pixelsRef.once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-            const pixels = snapshot.val();
-            for (const key in pixels) {
-                const [x, y] = key.split('-');
-                ctx.fillStyle = pixels[key].color;
-                ctx.fillRect(x, y, 10, 10); // Draw the pixel
-            }
-        } else {
-            console.log("No data available");
-        }
-    }).catch((error) => {
-        console.error("Error getting pixel data: ", error);
-    });
-}
-
-// Call getPixelData when initializing the canvas
-getPixelData();
-
 // Event listener to place a pixel on the canvas
 canvas.addEventListener('click', (e) => {
     if (!isUserAuthenticated) {
@@ -145,34 +134,59 @@ canvas.addEventListener('click', (e) => {
 
     // Draw the pixel at the clicked position
     ctx.fillStyle = currentColor;
-    ctx.fillRect(x, y, 10, 10);
+    ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
+    console.log(`Placing pixel at: (${x}, ${y})`);
+    console.log(`Color being used: ${currentColor}`);
 
-    // Set the pixel data in the database
-    setPixelData(x, y, currentColor);
-
-    // Set the cooldown
-    cooldownEndTime = Date.now() + cooldownDuration; // Set the cooldown end time
-    localStorage.setItem('cooldownEndTime', cooldownEndTime); // Save the cooldown end time
-    updateCooldownTimer(); // Update the displayed timer
+    // Start the cooldown
+    startCooldown();
 });
 
-// Event listener for password submission
-document.getElementById('submitPassword').addEventListener('click', function() {
-    const passwordInput = document.getElementById('passwordInput').value;
-    if (passwordInput === userPassword) {
-        alert('Password accepted! You can now place pixels.');
-        isUserAuthenticated = true; // Set user as authenticated
-        document.getElementById('clearCanvasButton').style.display = 'block'; // Show clear canvas button
-        document.getElementById('passwordInput').style.display = 'none'; // Hide password input
+// Function to start the cooldown timer
+function startCooldown() {
+    cooldownEndTime = Date.now() + cooldownDuration;
+    localStorage.setItem('cooldownEndTime', cooldownEndTime);
+    updateCooldownTimer();
+}
+
+// Authentication
+document.getElementById("submitPassword").addEventListener("click", function() {
+    const inputPassword = document.getElementById("passwordInput").value;
+
+    if (inputPassword === adminPassword) {
+        alert("Welcome, Admin!");
+        isUserAuthenticated = true;
+        enableCanvasInteraction(true);
+        displayUserPassword(); // Display the user password if admin logs in
+    } else if (inputPassword === userPassword) {
+        alert("Welcome, User!");
+        isUserAuthenticated = true;
+        enableCanvasInteraction(false);
     } else {
-        alert('Incorrect password! Please try again.');
+        alert("Incorrect password!");
     }
 });
 
-// Clear Canvas functionality
-document.getElementById('clearCanvasButton').addEventListener('click', function() {
-    if (confirm('Are you sure you want to clear the canvas? This action cannot be undone.')) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-        db.ref('pixels/').remove(); // Remove pixels from the database
+// Enable canvas interaction and show "Clear Canvas" for admin
+function enableCanvasInteraction(isAdmin) {
+    canvas.style.pointerEvents = 'auto';
+    if (isAdmin) {
+        document.getElementById("clearCanvasButton").style.display = 'block';
     }
+}
+
+// Function for the admin to see the weekly user password
+function displayUserPassword() {
+    const userPasswordDisplay = document.getElementById('userPasswordDisplay');
+    if (!userPasswordDisplay) {
+        const newDisplay = document.createElement('div');
+        newDisplay.id = 'userPasswordDisplay';
+        newDisplay.textContent = `Weekly User Password: ${userPassword}`;
+        document.body.appendChild(newDisplay); // Append it to the body or a specific container
+    }
+}
+
+// Clear Canvas Functionality
+document.getElementById("clearCanvasButton").addEventListener("click", function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
