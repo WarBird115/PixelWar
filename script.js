@@ -7,6 +7,9 @@ const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
 
+// Encryption/Decryption Key
+const encryptionKey = "mySecretKey123"; // You can change this to anything you want
+
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -17,21 +20,33 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to generate or retrieve the weekly password, with persistence
+// Function to encrypt data
+function encryptData(data) {
+    return CryptoJS.AES.encrypt(data, encryptionKey).toString();
+}
+
+// Function to decrypt data
+function decryptData(data) {
+    const bytes = CryptoJS.AES.decrypt(data, encryptionKey);
+    return bytes.toString(CryptoJS.enc.Utf8);
+}
+
+// Function to generate or retrieve the weekly password, with encryption
 function generateOrRetrieveWeeklyPassword() {
-    const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
+    const encryptedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already an encrypted password for the week
     const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
 
     const now = new Date();
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
-    if (storedPassword && storedWeek === currentWeek) {
-        // If the password is still valid for this week, return it
-        return storedPassword;
+    if (encryptedPassword && storedWeek === currentWeek) {
+        // If the encrypted password is still valid for this week, decrypt and return it
+        return decryptData(encryptedPassword);
     } else {
-        // Generate a new password and store it
+        // Generate a new password, encrypt it, and store it
         const newPassword = generateRandomPassword();
-        localStorage.setItem('weeklyUserPassword', newPassword);
+        const encryptedNewPassword = encryptData(newPassword);
+        localStorage.setItem('weeklyUserPassword', encryptedNewPassword);
         localStorage.setItem('passwordWeek', currentWeek);
         return newPassword;
     }
