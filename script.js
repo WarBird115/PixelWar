@@ -1,12 +1,8 @@
-// Import Firebase modules
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get } from "firebase/database"; // Import database functions
-
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
     authDomain: "pixelwarnew.firebaseapp.com",
-    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app", // Updated URL
+    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "pixelwarnew",
     storageBucket: "pixelwarnew.appspot.com",
     messagingSenderId: "312098433016",
@@ -15,8 +11,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app); // Initialize the database
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database(); // Initialize the database
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -117,16 +113,16 @@ colorPicker.addEventListener('input', function() {
 
 // Function to set pixel data in the database
 function setPixelData(x, y, color) {
-    const pixelRef = ref(db, 'pixels/' + x + '-' + y);
-    set(pixelRef, {
+    const pixelRef = db.ref('pixels/' + x + '-' + y);
+    pixelRef.set({
         color: color
     });
 }
 
 // Function to get pixel data from the database
 function getPixelData() {
-    const pixelsRef = ref(db, 'pixels/');
-    get(pixelsRef).then((snapshot) => {
+    const pixelsRef = db.ref('pixels/');
+    pixelsRef.once('value').then((snapshot) => {
         if (snapshot.exists()) {
             const pixels = snapshot.val();
             for (const key in pixels) {
@@ -177,47 +173,28 @@ canvas.addEventListener('click', (e) => {
 
 // Function to start the cooldown timer
 function startCooldown() {
-    cooldownEndTime = Date.now() + cooldownDuration;
-    localStorage.setItem('cooldownEndTime', cooldownEndTime);
-    updateCooldownTimer();
+    cooldownEndTime = Date.now() + cooldownDuration; // Set the cooldown end time
+    localStorage.setItem('cooldownEndTime', cooldownEndTime); // Save the cooldown end time
+    updateCooldownTimer(); // Update the displayed timer
 }
 
-// Authentication
-document.getElementById("submitPassword").addEventListener("click", function() {
-    const inputPassword = document.getElementById("passwordInput").value;
-
-    if (inputPassword === adminPassword) {
-        alert("Welcome, Admin!");
-        isUserAuthenticated = true;
-        enableCanvasInteraction(true);
-        displayAdminPassword(); // Display the random password if admin logs in
-    } else if (inputPassword === userPassword) {
-        alert("Welcome, User!");
-        isUserAuthenticated = true;
-        enableCanvasInteraction(false);
+// Event listener for password submission
+document.getElementById('submitPassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('passwordInput').value;
+    if (passwordInput === userPassword) {
+        alert('Password accepted! You can now place pixels.');
+        isUserAuthenticated = true; // Set user as authenticated
+        document.getElementById('clearCanvasButton').style.display = 'block'; // Show clear canvas button
+        document.getElementById('passwordInput').style.display = 'none'; // Hide password input
     } else {
-        alert("Incorrect password!");
+        alert('Incorrect password! Please try again.');
     }
 });
 
-// Enable canvas interaction and show "Clear Canvas" for admin
-function enableCanvasInteraction(isAdmin) {
-    canvas.style.pointerEvents = 'auto';
-    if (isAdmin) {
-        document.getElementById("clearCanvasButton").style.display = 'block';
+// Clear Canvas functionality
+document.getElementById('clearCanvasButton').addEventListener('click', function() {
+    if (confirm('Are you sure you want to clear the canvas? This action cannot be undone.')) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+        db.ref('pixels/').remove(); // Remove pixels from the database
     }
-}
-
-// Function for the admin to see the weekly user password
-function displayAdminPassword() {
-    const passwordDisplay = document.createElement('p');
-    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
-    passwordDisplay.style.textAlign = 'center';
-    document.body.appendChild(passwordDisplay);
-    // console.log(`Displaying User Password: ${userPassword}`); // Remove this line to prevent logging
-}
-
-// Clear Canvas Functionality
-document.getElementById("clearCanvasButton").addEventListener("click", function() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
