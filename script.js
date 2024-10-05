@@ -17,24 +17,14 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to generate or retrieve the weekly password, with persistence
+// Function to generate or retrieve the weekly password without using localStorage
 function generateOrRetrieveWeeklyPassword() {
-    const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
-    const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
-
     const now = new Date();
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
-    if (storedPassword && storedWeek === currentWeek) {
-        // If the password is still valid for this week, return it
-        return storedPassword;
-    } else {
-        // Generate a new password and store it
-        const newPassword = generateRandomPassword();
-        localStorage.setItem('weeklyUserPassword', newPassword);
-        localStorage.setItem('passwordWeek', currentWeek);
-        return newPassword;
-    }
+    // Store the password in a variable instead of localStorage
+    const newPassword = generateRandomPassword();
+    return newPassword;
 }
 
 // Function to get the week number for the current date
@@ -46,6 +36,7 @@ function getWeekNumber(date) {
 
 // Remove unnecessary localStorage entries
 localStorage.removeItem('RandomAccessCode');
+localStorage.removeItem('weeklyUserPassword'); // Remove old password storage
 
 // Set the canvas size and pixel scaling
 const canvasWidth = 400;
