@@ -138,7 +138,10 @@ function startCooldown() {
 document.getElementById("submitPassword").addEventListener("click", function() {
     const inputPassword = document.getElementById("passwordInput").value;
 
-    userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
+    // Generate or retrieve user password before checking input
+    userPassword = generateOrRetrieveWeeklyPassword(); 
+
+    console.log(`User Password: ${userPassword}`); // Debugging line
 
     if (inputPassword === adminPassword) {
         alert("Welcome, Admin!");
@@ -165,7 +168,7 @@ function enableCanvasInteraction(isAdmin) {
 // Function for the admin to see the weekly user password
 function displayAdminPassword() {
     const passwordDisplay = document.createElement('p');
-    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`; // This will now have the correct userPassword value
+    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
     console.log(`Displaying User Password: ${userPassword}`);
