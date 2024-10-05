@@ -17,20 +17,14 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to encode data to Base64
-function encodeToBase64(data) {
-    return btoa(data);
+// Function to encrypt a password to Base64
+function encryptToBase64(password) {
+    return btoa(password);
 }
 
-// Function to decode data from Base64 with error handling
-function decodeFromBase64(data) {
-    try {
-        return atob(data);
-    } catch (e) {
-        console.error("Decoding error:", e);
-        console.log("Data being decoded:", data); // Log the data being decoded for further inspection
-        return null; // Return null if decoding fails
-    }
+// Function to decrypt a Base64 password
+function decryptFromBase64(encodedPassword) {
+    return atob(encodedPassword);
 }
 
 // Function to generate or retrieve the weekly password, with persistence
@@ -42,21 +36,15 @@ function generateOrRetrieveWeeklyPassword() {
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
     if (storedPassword && storedWeek === currentWeek) {
-        // Decode and return the password
-        const decodedPassword = decodeFromBase64(storedPassword);
-        if (decodedPassword) {
-            console.log('Retrieved Password:', decodedPassword); // Debugging log
-            return decodedPassword;
-        }
+        // If the password is still valid for this week, return it
+        return decryptFromBase64(storedPassword); // Decrypt the stored password before returning
+    } else {
+        // Generate a new password and store it
+        const newPassword = generateRandomPassword();
+        localStorage.setItem('weeklyUserPassword', encryptToBase64(newPassword)); // Encrypt before storing
+        localStorage.setItem('passwordWeek', currentWeek);
+        return newPassword;
     }
-
-    // Generate a new password, encode it, and store it
-    const newPassword = generateRandomPassword();
-    const encodedPassword = encodeToBase64(newPassword);
-    localStorage.setItem('weeklyUserPassword', encodedPassword);
-    localStorage.setItem('passwordWeek', currentWeek);
-    console.log('Generated New Password:', newPassword); // Debugging log
-    return newPassword;
 }
 
 // Function to get the week number for the current date
@@ -173,7 +161,7 @@ function displayAdminPassword() {
     passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
-    console.log(`Displaying User Password: ${userPassword}`);
+    // console.log(`Displaying User Password: ${userPassword}`); // Remove this line to prevent logging
 }
 
 // Clear Canvas Functionality
