@@ -17,14 +17,24 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to generate or retrieve the weekly password without using localStorage
+// Function to generate or retrieve the weekly password, with persistence
 function generateOrRetrieveWeeklyPassword() {
+    const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
+    const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
+
     const now = new Date();
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
-    // Store the password in a variable instead of localStorage
-    const newPassword = generateRandomPassword();
-    return newPassword;
+    if (storedPassword && storedWeek === currentWeek) {
+        // If the password is still valid for this week, return it
+        return storedPassword;
+    } else {
+        // Generate a new password and store it
+        const newPassword = generateRandomPassword();
+        localStorage.setItem('weeklyUserPassword', newPassword);
+        localStorage.setItem('passwordWeek', currentWeek);
+        return newPassword;
+    }
 }
 
 // Function to get the week number for the current date
@@ -36,7 +46,6 @@ function getWeekNumber(date) {
 
 // Remove unnecessary localStorage entries
 localStorage.removeItem('RandomAccessCode');
-localStorage.removeItem('weeklyUserPassword'); // Remove old password storage
 
 // Set the canvas size and pixel scaling
 const canvasWidth = 400;
@@ -58,7 +67,7 @@ function updateCooldownTimer() {
         if (remainingTime > 0) {
             const minutes = Math.floor(remainingTime / 1000 / 60);
             const seconds = Math.floor((remainingTime / 1000) % 60);
-            cooldownTimer.textContent = `Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            cooldownTimer.textContent = Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds};
         } else {
             clearInterval(interval);
             cooldownEndTime = null;
@@ -96,8 +105,8 @@ canvas.addEventListener('click', (e) => {
     // Draw the pixel at the clicked position
     ctx.fillStyle = currentColor;
     ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
-    console.log(`Placing pixel at: (${x}, ${y})`);
-    console.log(`Color being used: ${currentColor}`);
+    console.log(Placing pixel at: (${x}, ${y}));
+    console.log(Color being used: ${currentColor});
 
     // Start the cooldown
     startCooldown();
@@ -139,10 +148,10 @@ function enableCanvasInteraction(isAdmin) {
 // Function for the admin to see the weekly user password
 function displayAdminPassword() {
     const passwordDisplay = document.createElement('p');
-    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
+    passwordDisplay.textContent = Weekly User Password: ${userPassword};
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
-    console.log(`Displaying User Password: ${userPassword}`);
+    console.log(Displaying User Password: ${userPassword});
 }
 
 // Clear Canvas Functionality
