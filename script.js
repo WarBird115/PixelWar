@@ -1,19 +1,4 @@
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
-    authDomain: "pixelwarnew.firebaseapp.com",
-    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "pixelwarnew",
-    storageBucket: "pixelwarnew.appspot.com",
-    messagingSenderId: "312098433016",
-    appId: "1:312098433016:web:0edcc62b292cb41546580d",
-    measurementId: "G-9VH085RDE1"
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.database(); // Initialize the database
-
+// Make sure this is loaded after Firebase is initialized in the HTML
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
@@ -160,23 +145,16 @@ canvas.addEventListener('click', (e) => {
 
     // Draw the pixel at the clicked position
     ctx.fillStyle = currentColor;
-    ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
-    console.log(`Placing pixel at: (${x}, ${y})`);
-    console.log(`Color being used: ${currentColor}`);
+    ctx.fillRect(x, y, 10, 10);
 
-    // Set pixel data in the database
+    // Set the pixel data in the database
     setPixelData(x, y, currentColor);
 
-    // Start the cooldown
-    startCooldown();
-});
-
-// Function to start the cooldown timer
-function startCooldown() {
+    // Set the cooldown
     cooldownEndTime = Date.now() + cooldownDuration; // Set the cooldown end time
     localStorage.setItem('cooldownEndTime', cooldownEndTime); // Save the cooldown end time
     updateCooldownTimer(); // Update the displayed timer
-}
+});
 
 // Event listener for password submission
 document.getElementById('submitPassword').addEventListener('click', function() {
