@@ -1,3 +1,22 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, doc, setDoc, getDocs } from "firebase/firestore";
+
+// Your Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
+    authDomain: "pixelwarnew.firebaseapp.com",
+    projectId: "pixelwarnew",
+    storageBucket: "pixelwarnew.appspot.com",
+    messagingSenderId: "312098433016",
+    appId: "1:312098433016:web:0edcc62b292cb41546580d",
+    measurementId: "G-9VH085RDE1"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
@@ -95,8 +114,34 @@ colorPicker.addEventListener('input', function() {
     currentColor = colorPicker.value;
 });
 
+// Function to store pixel data in Firestore
+async function storePixelData(x, y, color) {
+    try {
+        await setDoc(doc(db, "pixels", `${x},${y}`), {
+            color: color
+        });
+        console.log(`Stored pixel at (${x}, ${y}) with color ${color}`);
+    } catch (error) {
+        console.error("Error storing pixel data: ", error);
+    }
+}
+
+// Function to load pixel data from Firestore
+async function loadPixelData() {
+    const querySnapshot = await getDocs(collection(db, "pixels"));
+    querySnapshot.forEach((doc) => {
+        const { color } = doc.data();
+        const [x, y] = doc.id.split(",").map(Number);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 10, 10); // Use the same size as before
+    });
+}
+
+// Call loadPixelData when the page loads
+loadPixelData();
+
 // Event listener to place a pixel on the canvas
-canvas.addEventListener('click', (e) => {
+canvas.addEventListener('click', async (e) => {
     if (!isUserAuthenticated) {
         alert('You must enter the correct password to place a pixel!');
         return;
@@ -117,6 +162,9 @@ canvas.addEventListener('click', (e) => {
     ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
     console.log(`Placing pixel at: (${x}, ${y})`);
     console.log(`Color being used: ${currentColor}`);
+
+    // Store the pixel data in Firestore
+    await storePixelData(x, y, currentColor);
 
     // Start the cooldown
     startCooldown();
