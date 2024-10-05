@@ -2,13 +2,10 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword; // Declare userPassword without initializing it
+let userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-
-// Encryption/Decryption Key
-const encryptionKey = "mySecretKey123"; // You can change this to anything you want
 
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
@@ -20,33 +17,21 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to encrypt data
-function encryptData(data) {
-    return CryptoJS.AES.encrypt(data, encryptionKey).toString();
-}
-
-// Function to decrypt data
-function decryptData(data) {
-    const bytes = CryptoJS.AES.decrypt(data, encryptionKey);
-    return bytes.toString(CryptoJS.enc.Utf8);
-}
-
-// Function to generate or retrieve the weekly password, with encryption
+// Function to generate or retrieve the weekly password, with persistence
 function generateOrRetrieveWeeklyPassword() {
-    const encryptedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already an encrypted password for the week
+    const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
     const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
 
     const now = new Date();
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
-    if (encryptedPassword && storedWeek === currentWeek) {
-        // If the encrypted password is still valid for this week, decrypt and return it
-        return decryptData(encryptedPassword);
+    if (storedPassword && storedWeek === currentWeek) {
+        // If the password is still valid for this week, return it
+        return storedPassword;
     } else {
-        // Generate a new password, encrypt it, and store it
+        // Generate a new password and store it
         const newPassword = generateRandomPassword();
-        const encryptedNewPassword = encryptData(newPassword);
-        localStorage.setItem('weeklyUserPassword', encryptedNewPassword);
+        localStorage.setItem('weeklyUserPassword', newPassword);
         localStorage.setItem('passwordWeek', currentWeek);
         return newPassword;
     }
@@ -58,6 +43,9 @@ function getWeekNumber(date) {
     const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
     return Math.ceil((days + firstJan.getDay() + 1) / 7);
 }
+
+// Remove unnecessary localStorage entries
+localStorage.removeItem('RandomAccessCode');
 
 // Set the canvas size and pixel scaling
 const canvasWidth = 400;
@@ -135,9 +123,6 @@ function startCooldown() {
 document.getElementById("submitPassword").addEventListener("click", function() {
     const inputPassword = document.getElementById("passwordInput").value;
 
-    // Only generate the user password here
-    userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
-
     if (inputPassword === adminPassword) {
         alert("Welcome, Admin!");
         isUserAuthenticated = true;
@@ -173,6 +158,3 @@ function displayAdminPassword() {
 document.getElementById("clearCanvasButton").addEventListener("click", function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
-
-// Call the function to generate or retrieve the password on page load
-userPassword = generateOrRetrieveWeeklyPassword();
