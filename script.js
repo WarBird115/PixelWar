@@ -1,23 +1,21 @@
-// Importing Firebase modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
-// Your Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
+  authDomain: "pixelwarnew.firebaseapp.com",
+  databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "pixelwarnew",
+  storageBucket: "pixelwarnew.appspot.com",
+  messagingSenderId: "312098433016",
+  appId: "1:312098433016:web:0edcc62b292cb41546580d",
+  measurementId: "G-9VH085RDE1"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Setup canvas and variables
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
@@ -29,53 +27,50 @@ let isUserAuthenticated = false; // Track user authentication status
 
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let password = '';
-    for (let i = 0; i < 5; i++) { // Generate a 5-character password
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let password = '';
+  for (let i = 0; i < 5; i++) { // Generate a 5-character password
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
 }
 
 // Function to encrypt a password to Base64
 function encryptToBase64(password) {
-    return btoa(password);
+  return btoa(password);
 }
 
 // Function to decrypt a Base64 password
 function decryptFromBase64(encodedPassword) {
-    return atob(encodedPassword);
+  return atob(encodedPassword);
 }
 
 // Function to generate or retrieve the weekly password, with persistence
 function generateOrRetrieveWeeklyPassword() {
-    const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
-    const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
+  const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
+  const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
 
-    const now = new Date();
-    const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
+  const now = new Date();
+  const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
-    if (storedPassword && storedWeek === currentWeek) {
-        // If the password is still valid for this week, return it
-        return decryptFromBase64(storedPassword); // Decrypt the stored password before returning
-    } else {
-        // Generate a new password and store it
-        const newPassword = generateRandomPassword();
-        localStorage.setItem('weeklyUserPassword', encryptToBase64(newPassword)); // Encrypt before storing
-        localStorage.setItem('passwordWeek', currentWeek);
-        return newPassword;
-    }
+  if (storedPassword && storedWeek === currentWeek) {
+    // If the password is still valid for this week, return it
+    return decryptFromBase64(storedPassword); // Decrypt the stored password before returning
+  } else {
+    // Generate a new password and store it
+    const newPassword = generateRandomPassword();
+    localStorage.setItem('weeklyUserPassword', encryptToBase64(newPassword)); // Encrypt before storing
+    localStorage.setItem('passwordWeek', currentWeek);
+    return newPassword;
+  }
 }
 
 // Function to get the week number for the current date
 function getWeekNumber(date) {
-    const firstJan = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + firstJan.getDay() + 1) / 7);
+  const firstJan = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+  return Math.ceil((days + firstJan.getDay() + 1) / 7);
 }
-
-// Remove unnecessary localStorage entries
-localStorage.removeItem('RandomAccessCode');
 
 // Set the canvas size and pixel scaling
 const canvasWidth = 400;
@@ -86,107 +81,107 @@ canvas.height = canvasHeight;
 // Check for existing cooldown in localStorage
 const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
 if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
-    cooldownEndTime = parseInt(savedCooldownEndTime, 10);
-    updateCooldownTimer();
+  cooldownEndTime = parseInt(savedCooldownEndTime, 10);
+  updateCooldownTimer();
 }
 
 // Function to update the cooldown timer
 function updateCooldownTimer() {
-    const interval = setInterval(() => {
-        const remainingTime = cooldownEndTime - Date.now();
-        if (remainingTime > 0) {
-            const minutes = Math.floor(remainingTime / 1000 / 60);
-            const seconds = Math.floor((remainingTime / 1000) % 60);
-            cooldownTimer.textContent = `Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        } else {
-            clearInterval(interval);
-            cooldownEndTime = null;
-            cooldownTimer.textContent = 'You can place a pixel now!';
-            localStorage.removeItem('cooldownEndTime');
-        }
-    }, 1000);
+  const interval = setInterval(() => {
+    const remainingTime = cooldownEndTime - Date.now();
+    if (remainingTime > 0) {
+      const minutes = Math.floor(remainingTime / 1000 / 60);
+      const seconds = Math.floor((remainingTime / 1000) % 60);
+      cooldownTimer.textContent = `Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    } else {
+      clearInterval(interval);
+      cooldownEndTime = null;
+      cooldownTimer.textContent = 'You can place a pixel now!';
+      localStorage.removeItem('cooldownEndTime');
+    }
+  }, 1000);
 }
 
 // Color Picker functionality
 const colorPicker = document.getElementById('colorPicker');
 let currentColor = colorPicker.value;
 
-colorPicker.addEventListener('input', function() {
-    currentColor = colorPicker.value;
+colorPicker.addEventListener('input', function () {
+  currentColor = colorPicker.value;
 });
 
 // Event listener to place a pixel on the canvas
 canvas.addEventListener('click', (e) => {
-    if (!isUserAuthenticated) {
-        alert('You must enter the correct password to place a pixel!');
-        return;
-    }
+  if (!isUserAuthenticated) {
+    alert('You must enter the correct password to place a pixel!');
+    return;
+  }
 
-    if (cooldownEndTime && Date.now() < cooldownEndTime) {
-        alert('You are still on cooldown!');
-        return;
-    }
+  if (cooldownEndTime && Date.now() < cooldownEndTime) {
+    alert('You are still on cooldown!');
+    return;
+  }
 
-    // Get the mouse position relative to the canvas
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
-    const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
+  // Get the mouse position relative to the canvas
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
+  const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
 
-    // Draw the pixel at the clicked position
-    ctx.fillStyle = currentColor;
-    ctx.fillRect(x, y, 10, 10); // Use 10x10 size for larger pixels
-    console.log(`Placing pixel at: (${x}, ${y})`);
-    console.log(`Color being used: ${currentColor}`);
+  // Draw the pixel on the canvas
+  ctx.fillStyle = currentColor;
+  ctx.fillRect(x, y, 1, 1);
 
-    // Start the cooldown
-    startCooldown();
+  // Save the pixel to Firebase
+  const pixelRef = ref(database, `pixels/${x},${y}`);
+  set(pixelRef, { color: currentColor }).then(() => {
+    console.log('Pixel saved to Firebase');
+  }).catch((error) => {
+    console.error('Error saving pixel:', error);
+  });
+
+  // Set cooldown
+  cooldownEndTime = Date.now() + cooldownDuration;
+  localStorage.setItem('cooldownEndTime', cooldownEndTime);
+  updateCooldownTimer();
 });
 
-// Function to start the cooldown timer
-function startCooldown() {
-    cooldownEndTime = Date.now() + cooldownDuration;
-    localStorage.setItem('cooldownEndTime', cooldownEndTime);
-    updateCooldownTimer();
-}
-
-// Authentication
-document.getElementById("submitPassword").addEventListener("click", function() {
-    const inputPassword = document.getElementById("passwordInput").value;
-
-    if (inputPassword === adminPassword) {
-        alert("Welcome, Admin!");
-        isUserAuthenticated = true;
-        enableCanvasInteraction(true);
-        displayUserPassword(); // Display the user password if admin logs in
-    } else if (inputPassword === userPassword) {
-        alert("Welcome, User!");
-        isUserAuthenticated = true;
-        enableCanvasInteraction(false);
-    } else {
-        alert("Incorrect password!");
-    }
+// Event listener for password submission
+document.getElementById('submitPassword').addEventListener('click', () => {
+  const passwordInput = document.getElementById('passwordInput').value;
+  if (passwordInput === adminPassword) {
+    // Show clear canvas button if admin password is entered
+    document.getElementById('clearCanvasButton').style.display = 'inline';
+    alert('Admin access granted. You can now clear the canvas.');
+    isUserAuthenticated = true; // Allow the admin to place pixels
+  } else if (passwordInput === userPassword) {
+    alert('User access granted. You can now place pixels!');
+    isUserAuthenticated = true; // Allow the user to place pixels
+  } else {
+    alert('Incorrect password!');
+  }
 });
 
-// Enable canvas interaction and show "Clear Canvas" for admin
-function enableCanvasInteraction(isAdmin) {
-    canvas.style.pointerEvents = 'auto';
-    if (isAdmin) {
-        document.getElementById("clearCanvasButton").style.display = 'block';
-    }
-}
-
-// Function for the admin to see the weekly user password
-function displayUserPassword() {
-    const userPasswordDisplay = document.getElementById('userPasswordDisplay');
-    if (!userPasswordDisplay) {
-        const newDisplay = document.createElement('div');
-        newDisplay.id = 'userPasswordDisplay';
-        newDisplay.textContent = `Weekly User Password: ${userPassword}`;
-        document.body.appendChild(newDisplay); // Append it to the body or a specific container
-    }
-}
-
-// Clear Canvas Functionality
-document.getElementById("clearCanvasButton").addEventListener("click", function() {
+// Event listener for clear canvas button
+document.getElementById('clearCanvasButton').addEventListener('click', () => {
+  const confirmed = confirm('Are you sure you want to clear the canvas?');
+  if (confirmed) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    alert('Canvas cleared!');
+    // Clear pixels in Firebase (optional)
+    const pixelsRef = ref(database, 'pixels');
+    set(pixelsRef, null);
+  }
+});
+
+// Load existing pixels from Firebase
+const pixelsRef = ref(database, 'pixels');
+onValue(pixelsRef, (snapshot) => {
+  const pixels = snapshot.val();
+  if (pixels) {
+    Object.keys(pixels).forEach((key) => {
+      const [x, y] = key.split(',').map(Number);
+      ctx.fillStyle = pixels[key].color;
+      ctx.fillRect(x, y, 1, 1);
+    });
+  }
 });

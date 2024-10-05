@@ -32,7 +32,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -203,6 +203,22 @@
         if (confirmed) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             alert('Canvas cleared!');
+            // Clear pixels in Firebase (optional)
+            const pixelsRef = ref(database, 'pixels');
+            set(pixelsRef, null);
+        }
+    });
+
+    // Load existing pixels from Firebase
+    const pixelsRef = ref(database, 'pixels');
+    onValue(pixelsRef, (snapshot) => {
+        const pixels = snapshot.val();
+        if (pixels) {
+            Object.keys(pixels).forEach((key) => {
+                const [x, y] = key.split(',').map(Number);
+                ctx.fillStyle = pixels[key].color;
+                ctx.fillRect(x, y, 1, 1);
+            });
         }
     });
   </script>
