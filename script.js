@@ -10,7 +10,8 @@ const firebaseConfig = {
     storageBucket: "pixelwarnew.appspot.com",
     messagingSenderId: "312098433016",
     appId: "1:312098433016:web:0edcc62b292cb41546580d",
-    measurementId: "G-9VH085RDE1"
+    measurementId: "G-9VH085RDE1",
+    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
 // Initialize Firebase
