@@ -1,22 +1,22 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+// Import Firebase modules
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, get } from "firebase/database"; // Import database functions
 
-// Your Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
     authDomain: "pixelwarnew.firebaseapp.com",
+    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app", // Updated URL
     projectId: "pixelwarnew",
     storageBucket: "pixelwarnew.appspot.com",
     messagingSenderId: "312098433016",
     appId: "1:312098433016:web:0edcc62b292cb41546580d",
-    measurementId: "G-9VH085RDE1",
-    databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app"
+    measurementId: "G-9VH085RDE1"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+const db = getDatabase(app); // Initialize the database
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -115,6 +115,36 @@ colorPicker.addEventListener('input', function() {
     currentColor = colorPicker.value;
 });
 
+// Function to set pixel data in the database
+function setPixelData(x, y, color) {
+    const pixelRef = ref(db, 'pixels/' + x + '-' + y);
+    set(pixelRef, {
+        color: color
+    });
+}
+
+// Function to get pixel data from the database
+function getPixelData() {
+    const pixelsRef = ref(db, 'pixels/');
+    get(pixelsRef).then((snapshot) => {
+        if (snapshot.exists()) {
+            const pixels = snapshot.val();
+            for (const key in pixels) {
+                const [x, y] = key.split('-');
+                ctx.fillStyle = pixels[key].color;
+                ctx.fillRect(x, y, 10, 10); // Draw the pixel
+            }
+        } else {
+            console.log("No data available");
+        }
+    }).catch((error) => {
+        console.error("Error getting pixel data: ", error);
+    });
+}
+
+// Call getPixelData when initializing the canvas
+getPixelData();
+
 // Event listener to place a pixel on the canvas
 canvas.addEventListener('click', (e) => {
     if (!isUserAuthenticated) {
@@ -138,11 +168,11 @@ canvas.addEventListener('click', (e) => {
     console.log(`Placing pixel at: (${x}, ${y})`);
     console.log(`Color being used: ${currentColor}`);
 
+    // Set pixel data in the database
+    setPixelData(x, y, currentColor);
+
     // Start the cooldown
     startCooldown();
-
-    // Save the pixel to Firebase
-    savePixelToFirebase(x, y, currentColor);
 });
 
 // Function to start the cooldown timer
@@ -191,30 +221,3 @@ function displayAdminPassword() {
 document.getElementById("clearCanvasButton").addEventListener("click", function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
-
-// Function to save pixel data to Firebase
-function savePixelToFirebase(x, y, color) {
-    const pixelRef = ref(db, 'pixels/' + Date.now()); // Use current timestamp as unique ID
-    set(pixelRef, {
-        x: x,
-        y: y,
-        color: color
-    }).then(() => {
-        console.log("Pixel saved successfully to Firebase.");
-    }).catch((error) => {
-        console.error("Error saving pixel to Firebase: ", error);
-    });
-}
-
-// Load pixels from Firebase when the page loads
-window.onload = function() {
-    const pixelsRef = ref(db, 'pixels/');
-    onValue(pixelsRef, (snapshot) => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before redrawing
-        snapshot.forEach((childSnapshot) => {
-            const pixelData = childSnapshot.val();
-            ctx.fillStyle = pixelData.color;
-            ctx.fillRect(pixelData.x, pixelData.y, 10, 10); // Draw the pixel on the canvas
-        });
-    });
-};
