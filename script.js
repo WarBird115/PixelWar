@@ -41,13 +41,16 @@ function generateOrRetrieveWeeklyPassword() {
 
     if (encryptedPassword && storedWeek === currentWeek) {
         // If the encrypted password is still valid for this week, decrypt and return it
-        return decryptData(encryptedPassword);
+        const decryptedPassword = decryptData(encryptedPassword);
+        console.log(`Decrypted Password: ${decryptedPassword}`); // Debugging line
+        return decryptedPassword;
     } else {
         // Generate a new password, encrypt it, and store it
         const newPassword = generateRandomPassword();
         const encryptedNewPassword = encryptData(newPassword);
         localStorage.setItem('weeklyUserPassword', encryptedNewPassword);
         localStorage.setItem('passwordWeek', currentWeek);
+        console.log(`New Password Generated: ${newPassword}`); // Debugging line
         return newPassword;
     }
 }
@@ -154,6 +157,7 @@ document.getElementById("submitPassword").addEventListener("click", function() {
         enableCanvasInteraction(false);
     } else {
         alert("Incorrect password!");
+        console.log(`Input Password: ${inputPassword}`); // Log input for comparison
     }
 });
 
