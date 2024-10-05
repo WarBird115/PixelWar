@@ -2,7 +2,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword; // User password
+let userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
@@ -17,24 +17,41 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to set a new user password every Sunday at 00:00
-function updateWeeklyPassword() {
+// Function to generate or retrieve the weekly password, with persistence
+function generateOrRetrieveWeeklyPassword() {
+    const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
+    const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
+
     const now = new Date();
-    const lastGeneratedDate = localStorage.getItem('passwordGeneratedDate');
-    
-    // Check if the password needs to be generated or updated
-    if (!userPassword || (lastGeneratedDate && new Date(lastGeneratedDate).getDay() === 0)) {
-        userPassword = generateRandomPassword();
-        localStorage.setItem('userPassword', userPassword);
-        localStorage.setItem('passwordGeneratedDate', now.toISOString()); // Store the date the password was generated
-        console.log(`New User Password: ${userPassword}`);
+    const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
+
+    if (storedPassword && storedWeek === currentWeek) {
+        // If the password is still valid for this week, return it
+        return storedPassword;
     } else {
-        userPassword = localStorage.getItem('userPassword'); // Load existing password if it exists
+        // Generate a new password and store it
+        const newPassword = generateRandomPassword();
+        localStorage.setItem('weeklyUserPassword', newPassword);
+        localStorage.setItem('passwordWeek', currentWeek);
+        return newPassword;
     }
 }
 
-// Call the function to set the password on page load
-updateWeeklyPassword();
+// Function to get the week number for the current date
+function getWeekNumber(date) {
+    const firstJan = new Date(date.getFullYear(), 0, 1);
+    const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+    return Math.ceil((days + firstJan.getDay() + 1) / 7);
+}
+
+// Remove unnecessary localStorage entries
+localStorage.removeItem('RandomAccessCode');
+
+// Set the canvas size and pixel scaling
+const canvasWidth = 400;
+const canvasHeight = 400;
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 
 // Check for existing cooldown in localStorage
 const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
