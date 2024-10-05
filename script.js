@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -20,7 +20,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
+let userPassword = ''; // Variable to store user password
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
@@ -35,33 +35,24 @@ function generateRandomPassword() {
   return password;
 }
 
-// Function to encrypt a password to Base64
-function encryptToBase64(password) {
-  return btoa(password);
-}
-
-// Function to decrypt a Base64 password
-function decryptFromBase64(encodedPassword) {
-  return atob(encodedPassword);
-}
-
-// Function to generate or retrieve the weekly password, with persistence
-function generateOrRetrieveWeeklyPassword() {
-  const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
-  const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
+// Function to generate or retrieve the weekly password from Firebase
+async function generateOrRetrieveWeeklyPassword() {
+  const passwordRef = ref(database, 'weeklyUserPassword'); // Reference to the password in Firebase
+  const snapshot = await get(passwordRef); // Get the password from Firebase
 
   const now = new Date();
   const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
-  if (storedPassword && storedWeek === currentWeek) {
-    // If the password is still valid for this week, return it
-    return decryptFromBase64(storedPassword); // Decrypt the stored password before returning
+  if (snapshot.exists()) {
+    // If the password exists, return it
+    userPassword = snapshot.val(); // Assign the retrieved password to userPassword
+    return userPassword;
   } else {
     // Generate a new password and store it
     const newPassword = generateRandomPassword();
-    localStorage.setItem('weeklyUserPassword', encryptToBase64(newPassword)); // Encrypt before storing
-    localStorage.setItem('passwordWeek', currentWeek);
-    return newPassword;
+    await set(passwordRef, newPassword); // Store the new password in Firebase
+    userPassword = newPassword; // Assign the newly generated password to userPassword
+    return userPassword;
   }
 }
 
@@ -146,14 +137,15 @@ canvas.addEventListener('click', (e) => {
 });
 
 // Event listener for password submission
-document.getElementById('submitPassword').addEventListener('click', () => {
+document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
+  
   if (passwordInput === adminPassword) {
     // Show clear canvas button if admin password is entered
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true; // Allow the admin to place pixels
-  } else if (passwordInput === userPassword) {
+  } else if (passwordInput === await generateOrRetrieveWeeklyPassword()) {
     alert('User access granted. You can now place pixels!');
     isUserAuthenticated = true; // Allow the user to place pixels
   } else {
@@ -185,3 +177,6 @@ onValue(pixelsRef, (snapshot) => {
     });
   }
 });
+
+// Call to retrieve or generate the weekly password
+generateOrRetrieveWeeklyPassword();
