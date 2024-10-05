@@ -28,7 +28,7 @@ function decodeFromBase64(data) {
         return atob(data);
     } catch (e) {
         console.error("Decoding error:", e);
-        return null; // Handle the error as needed
+        return null; // Return null if decoding fails
     }
 }
 
@@ -41,23 +41,21 @@ function generateOrRetrieveWeeklyPassword() {
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
     if (storedPassword && storedWeek === currentWeek) {
-        console.log('Stored Password:', storedPassword); // Debugging log
         // Decode and return the password
         const decodedPassword = decodeFromBase64(storedPassword);
         if (decodedPassword) {
+            console.log('Retrieved Password:', decodedPassword); // Debugging log
             return decodedPassword;
-        } else {
-            // Handle the case where decoding fails (e.g., generate a new password)
-            return generateRandomPassword();
         }
-    } else {
-        // Generate a new password, encode it, and store it
-        const newPassword = generateRandomPassword();
-        const encodedPassword = encodeToBase64(newPassword);
-        localStorage.setItem('weeklyUserPassword', encodedPassword);
-        localStorage.setItem('passwordWeek', currentWeek);
-        return newPassword;
     }
+
+    // Generate a new password, encode it, and store it
+    const newPassword = generateRandomPassword();
+    const encodedPassword = encodeToBase64(newPassword);
+    localStorage.setItem('weeklyUserPassword', encodedPassword);
+    localStorage.setItem('passwordWeek', currentWeek);
+    console.log('Generated New Password:', newPassword); // Debugging log
+    return newPassword;
 }
 
 // Function to get the week number for the current date
