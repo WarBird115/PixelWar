@@ -16,7 +16,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const database = getDatabase(app);
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
