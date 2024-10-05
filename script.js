@@ -17,17 +17,18 @@ function generateRandomPassword() {
     return password;
 }
 
-// Function to encode data to base64
+// Function to encode data to Base64
 function encodeToBase64(data) {
     return btoa(data);
 }
 
-// Function to decode data from base64 with error handling
+// Function to decode data from Base64 with error handling
 function decodeFromBase64(data) {
     try {
         return atob(data);
     } catch (e) {
         console.error("Decoding error:", e);
+        console.log("Data being decoded:", data); // Log the data being decoded for further inspection
         return null; // Return null if decoding fails
     }
 }
