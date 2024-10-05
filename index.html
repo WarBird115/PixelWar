@@ -105,9 +105,6 @@
         return Math.ceil((days + firstJan.getDay() + 1) / 7);
     }
 
-    // Remove unnecessary localStorage entries
-    localStorage.removeItem('RandomAccessCode');
-
     // Set the canvas size and pixel scaling
     const canvasWidth = 400;
     const canvasHeight = 400;
@@ -203,22 +200,22 @@
         if (confirmed) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             alert('Canvas cleared!');
-            // Clear pixels in Firebase (optional)
+            // Optionally clear pixels from Firebase
             const pixelsRef = ref(database, 'pixels');
-            set(pixelsRef, null);
+            set(pixelsRef, null); // Clear all pixels from Firebase
         }
     });
 
     // Load existing pixels from Firebase
     const pixelsRef = ref(database, 'pixels');
     onValue(pixelsRef, (snapshot) => {
-        const pixels = snapshot.val();
-        if (pixels) {
-            Object.keys(pixels).forEach((key) => {
+        const data = snapshot.val();
+        if (data) {
+            for (const key in data) {
                 const [x, y] = key.split(',').map(Number);
-                ctx.fillStyle = pixels[key].color;
+                ctx.fillStyle = data[key].color;
                 ctx.fillRect(x, y, 1, 1);
-            });
+            }
         }
     });
   </script>
