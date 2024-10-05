@@ -41,16 +41,13 @@ function generateOrRetrieveWeeklyPassword() {
 
     if (encryptedPassword && storedWeek === currentWeek) {
         // If the encrypted password is still valid for this week, decrypt and return it
-        const decryptedPassword = decryptData(encryptedPassword);
-        console.log(`Decrypted Password: ${decryptedPassword}`); // Debugging line
-        return decryptedPassword;
+        return decryptData(encryptedPassword);
     } else {
         // Generate a new password, encrypt it, and store it
         const newPassword = generateRandomPassword();
         const encryptedNewPassword = encryptData(newPassword);
         localStorage.setItem('weeklyUserPassword', encryptedNewPassword);
         localStorage.setItem('passwordWeek', currentWeek);
-        console.log(`New Password Generated: ${newPassword}`); // Debugging line
         return newPassword;
     }
 }
@@ -61,9 +58,6 @@ function getWeekNumber(date) {
     const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
     return Math.ceil((days + firstJan.getDay() + 1) / 7);
 }
-
-// Remove unnecessary localStorage entries
-localStorage.removeItem('RandomAccessCode');
 
 // Set the canvas size and pixel scaling
 const canvasWidth = 400;
@@ -141,10 +135,8 @@ function startCooldown() {
 document.getElementById("submitPassword").addEventListener("click", function() {
     const inputPassword = document.getElementById("passwordInput").value;
 
-    // Generate or retrieve user password before checking input
-    userPassword = generateOrRetrieveWeeklyPassword(); 
-
-    console.log(`User Password: ${userPassword}`); // Debugging line
+    // Only generate the user password here
+    userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
 
     if (inputPassword === adminPassword) {
         alert("Welcome, Admin!");
@@ -157,7 +149,6 @@ document.getElementById("submitPassword").addEventListener("click", function() {
         enableCanvasInteraction(false);
     } else {
         alert("Incorrect password!");
-        console.log(`Input Password: ${inputPassword}`); // Log input for comparison
     }
 });
 
@@ -182,3 +173,6 @@ function displayAdminPassword() {
 document.getElementById("clearCanvasButton").addEventListener("click", function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
+
+// Call the function to generate or retrieve the password on page load
+userPassword = generateOrRetrieveWeeklyPassword();
