@@ -30,6 +30,10 @@
     <p>Game on and happy pixeling!</p>
   </div>
 
+  <div id="user-password" style="display: none; margin-top: 20px;">
+    User Password: <span id="display-password"></span>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
@@ -182,10 +186,12 @@
     document.getElementById('submitPassword').addEventListener('click', () => {
         const passwordInput = document.getElementById('passwordInput').value;
         if (passwordInput === adminPassword) {
-            // Show clear canvas button if admin password is entered
+            // Show clear canvas button and user password if admin password is entered
             document.getElementById('clearCanvasButton').style.display = 'inline';
             alert('Admin access granted. You can now clear the canvas.');
             isUserAuthenticated = true; // Allow the admin to place pixels
+            document.getElementById('user-password').style.display = 'block'; // Show user password div
+            document.getElementById('display-password').textContent = userPassword; // Display user password
         } else if (passwordInput === userPassword) {
             alert('User access granted. You can now place pixels!');
             isUserAuthenticated = true; // Allow the user to place pixels
@@ -194,27 +200,22 @@
         }
     });
 
-    // Event listener for clear canvas button
+    // Clear canvas functionality
     document.getElementById('clearCanvasButton').addEventListener('click', () => {
-        const confirmed = confirm('Are you sure you want to clear the canvas?');
-        if (confirmed) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            alert('Canvas cleared!');
-            // Optionally clear pixels from Firebase
-            const pixelsRef = ref(database, 'pixels');
-            set(pixelsRef, null); // Clear all pixels from Firebase
-        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        alert('Canvas cleared!');
     });
 
-    // Load existing pixels from Firebase
+    // Firebase listener for real-time pixel updates
     const pixelsRef = ref(database, 'pixels');
     onValue(pixelsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            for (const key in data) {
+        const pixels = snapshot.val();
+        if (pixels) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
+            for (const [key, value] of Object.entries(pixels)) {
                 const [x, y] = key.split(',').map(Number);
-                ctx.fillStyle = data[key].color;
-                ctx.fillRect(x, y, 1, 1);
+                ctx.fillStyle = value.color;
+                ctx.fillRect(x, y, 1, 1); // Draw the pixel on the canvas
             }
         }
     });
