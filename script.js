@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, doc, setDoc, getDocs } from "firebase/firestore";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -15,7 +15,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = getDatabase(app);
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -114,34 +114,8 @@ colorPicker.addEventListener('input', function() {
     currentColor = colorPicker.value;
 });
 
-// Function to store pixel data in Firestore
-async function storePixelData(x, y, color) {
-    try {
-        await setDoc(doc(db, "pixels", `${x},${y}`), {
-            color: color
-        });
-        console.log(`Stored pixel at (${x}, ${y}) with color ${color}`);
-    } catch (error) {
-        console.error("Error storing pixel data: ", error);
-    }
-}
-
-// Function to load pixel data from Firestore
-async function loadPixelData() {
-    const querySnapshot = await getDocs(collection(db, "pixels"));
-    querySnapshot.forEach((doc) => {
-        const { color } = doc.data();
-        const [x, y] = doc.id.split(",").map(Number);
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, 10, 10); // Use the same size as before
-    });
-}
-
-// Call loadPixelData when the page loads
-loadPixelData();
-
 // Event listener to place a pixel on the canvas
-canvas.addEventListener('click', async (e) => {
+canvas.addEventListener('click', (e) => {
     if (!isUserAuthenticated) {
         alert('You must enter the correct password to place a pixel!');
         return;
@@ -163,11 +137,11 @@ canvas.addEventListener('click', async (e) => {
     console.log(`Placing pixel at: (${x}, ${y})`);
     console.log(`Color being used: ${currentColor}`);
 
-    // Store the pixel data in Firestore
-    await storePixelData(x, y, currentColor);
-
     // Start the cooldown
     startCooldown();
+
+    // Save the pixel to Firebase
+    savePixelToFirebase(x, y, currentColor);
 });
 
 // Function to start the cooldown timer
@@ -216,3 +190,30 @@ function displayAdminPassword() {
 document.getElementById("clearCanvasButton").addEventListener("click", function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
+
+// Function to save pixel data to Firebase
+function savePixelToFirebase(x, y, color) {
+    const pixelRef = ref(db, 'pixels/' + Date.now()); // Use current timestamp as unique ID
+    set(pixelRef, {
+        x: x,
+        y: y,
+        color: color
+    }).then(() => {
+        console.log("Pixel saved successfully to Firebase.");
+    }).catch((error) => {
+        console.error("Error saving pixel to Firebase: ", error);
+    });
+}
+
+// Load pixels from Firebase when the page loads
+window.onload = function() {
+    const pixelsRef = ref(db, 'pixels/');
+    onValue(pixelsRef, (snapshot) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before redrawing
+        snapshot.forEach((childSnapshot) => {
+            const pixelData = childSnapshot.val();
+            ctx.fillStyle = pixelData.color;
+            ctx.fillRect(pixelData.x, pixelData.y, 10, 10); // Draw the pixel on the canvas
+        });
+    });
+};
