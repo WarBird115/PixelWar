@@ -165,7 +165,7 @@ function enableCanvasInteraction(isAdmin) {
 // Function for the admin to see the weekly user password
 function displayAdminPassword() {
     const passwordDisplay = document.createElement('p');
-    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`;
+    passwordDisplay.textContent = `Weekly User Password: ${userPassword}`; // This will now have the correct userPassword value
     passwordDisplay.style.textAlign = 'center';
     document.body.appendChild(passwordDisplay);
     console.log(`Displaying User Password: ${userPassword}`);
