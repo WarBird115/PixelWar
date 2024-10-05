@@ -2,7 +2,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
+let userPassword; // Declare userPassword without initializing it
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
@@ -137,6 +137,8 @@ function startCooldown() {
 // Authentication
 document.getElementById("submitPassword").addEventListener("click", function() {
     const inputPassword = document.getElementById("passwordInput").value;
+
+    userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
 
     if (inputPassword === adminPassword) {
         alert("Welcome, Admin!");
