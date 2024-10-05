@@ -2,13 +2,10 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword = generateRandomPassword(); // Randomly generated user password
+let userPassword; // User password
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-
-// Generate random password immediately
-console.log(`Generated User Password: ${userPassword}`);
 
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
@@ -23,32 +20,21 @@ function generateRandomPassword() {
 // Function to set a new user password every Sunday at 00:00
 function updateWeeklyPassword() {
     const now = new Date();
-    const nextSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (7 - now.getDay()) % 7, 0, 0, 0); // Next Sunday at 00:00
-
-    const timeUntilNextSunday = nextSunday.getTime() - now.getTime();
+    const lastGeneratedDate = localStorage.getItem('passwordGeneratedDate');
     
-    // If it's already Sunday at 00:00, generate the password right away
-    if (now.getDay() === 0 && now.getHours() === 0) {
+    // Check if the password needs to be generated or updated
+    if (!userPassword || (lastGeneratedDate && new Date(lastGeneratedDate).getDay() === 0)) {
         userPassword = generateRandomPassword();
-        console.log(`Updated User Password on Sunday: ${userPassword}`);
+        localStorage.setItem('userPassword', userPassword);
+        localStorage.setItem('passwordGeneratedDate', now.toISOString()); // Store the date the password was generated
+        console.log(`New User Password: ${userPassword}`);
+    } else {
+        userPassword = localStorage.getItem('userPassword'); // Load existing password if it exists
     }
-
-    // Set a timeout to update the password at the next Sunday 00:00
-    setTimeout(() => {
-        userPassword = generateRandomPassword();
-        console.log(`New User Password for the week: ${userPassword}`);
-        updateWeeklyPassword(); // Schedule the next update for the following week
-    }, timeUntilNextSunday);
 }
 
-// Call the function to start updating the password
+// Call the function to set the password on page load
 updateWeeklyPassword();
-
-// Set the canvas size and pixel scaling
-const canvasWidth = 400;
-const canvasHeight = 400;
-canvas.width = canvasWidth;
-canvas.height = canvasHeight;
 
 // Check for existing cooldown in localStorage
 const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
