@@ -2,7 +2,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
 const adminPassword = "Itsameamario1"; // Admin password
-let userPassword; // Declare userPassword without initializing it
+let userPassword = generateOrRetrieveWeeklyPassword(); // Generate or retrieve user password
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
@@ -22,12 +22,17 @@ function encodeToBase64(data) {
     return btoa(data);
 }
 
-// Function to decode data from base64
+// Function to decode data from base64 with error handling
 function decodeFromBase64(data) {
-    return atob(data);
+    try {
+        return atob(data);
+    } catch (e) {
+        console.error("Decoding error:", e);
+        return null; // Handle the error as needed
+    }
 }
 
-// Function to generate or retrieve the weekly password, with base64 encoding
+// Function to generate or retrieve the weekly password, with persistence
 function generateOrRetrieveWeeklyPassword() {
     const storedPassword = localStorage.getItem('weeklyUserPassword'); // Check if there's already a password for the week
     const storedWeek = localStorage.getItem('passwordWeek'); // Check if the password corresponds to this week
@@ -36,8 +41,15 @@ function generateOrRetrieveWeeklyPassword() {
     const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now); // Create a unique identifier for the current week
 
     if (storedPassword && storedWeek === currentWeek) {
-        // If the password is still valid for this week, decode and return it
-        return decodeFromBase64(storedPassword);
+        console.log('Stored Password:', storedPassword); // Debugging log
+        // Decode and return the password
+        const decodedPassword = decodeFromBase64(storedPassword);
+        if (decodedPassword) {
+            return decodedPassword;
+        } else {
+            // Handle the case where decoding fails (e.g., generate a new password)
+            return generateRandomPassword();
+        }
     } else {
         // Generate a new password, encode it, and store it
         const newPassword = generateRandomPassword();
@@ -169,6 +181,3 @@ function displayAdminPassword() {
 document.getElementById("clearCanvasButton").addEventListener("click", function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
-
-// Call the function to generate or retrieve the password on page load
-userPassword = generateOrRetrieveWeeklyPassword();
