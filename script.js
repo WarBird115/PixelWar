@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"; // Import Firebase Auth
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -15,6 +16,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const auth = getAuth(app); // Initialize Firebase Auth
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -139,17 +141,23 @@ canvas.addEventListener('click', (e) => {
 // Event listener for password submission
 document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
-  
+
+  // Check admin password
   if (passwordInput === adminPassword) {
     // Show clear canvas button if admin password is entered
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true; // Allow the admin to place pixels
-  } else if (passwordInput === await generateOrRetrieveWeeklyPassword()) {
-    alert('User access granted. You can now place pixels!');
-    isUserAuthenticated = true; // Allow the user to place pixels
-  } else {
-    alert('Incorrect password!');
+  } 
+  // Check user password through Firebase Authentication
+  else {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, passwordInput, userPassword);
+      alert('User access granted. You can now place pixels!');
+      isUserAuthenticated = true; // Allow the user to place pixels
+    } catch (error) {
+      alert('Incorrect password!');
+    }
   }
 });
 
