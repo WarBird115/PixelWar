@@ -3,13 +3,14 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js";
 
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-auth-domain",
-  databaseURL: "your-database-url",
-  projectId: "your-project-id",
-  storageBucket: "your-storage-bucket",
-  messagingSenderId: "your-messaging-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
+  authDomain: "pixelwarnew.firebaseapp.com",
+  databaseURL: "https://pixelwarnew-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "pixelwarnew",
+  storageBucket: "pixelwarnew.appspot.com",
+  messagingSenderId: "312098433016",
+  appId: "1:312098433016:web:0edcc62b292cb41546580d",
+  measurementId: "G-9VH085RDE1"
 };
 
 // Initialize Firebase
@@ -147,6 +148,12 @@ document.getElementById('submitPassword').addEventListener('click', () => {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
+
+    // Generate and log the encrypted weekly password for admin only
+    const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
+    const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
+    console.log('Weekly Encrypted Password:', encryptedPassword); // Log the encrypted password for admin only
+
   } else {
     const userPassword = setWeeklyUserPassword();
     if (passwordInput === userPassword) {
