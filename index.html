@@ -37,7 +37,6 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-    // Use the default export of CryptoJS as a named import
     const CryptoJS = window.CryptoJS;
 
     const firebaseConfig = {
@@ -193,44 +192,46 @@
         const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
         console.log('Weekly Encrypted Password:', encryptedPassword); // Log the encrypted password for admin only
         console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password
+        
+        // Display the user password on the webpage
+        document.getElementById('display-password').textContent = userPassword; // Show user password
+        document.getElementById('user-password').style.display = 'block'; // Show the div containing the user password
 
       } else {
         const userPassword = setWeeklyUserPassword();
         if (passwordInput === userPassword) {
-          alert('User access granted. You can now place pixels!');
+          alert('User access granted. You can now place pixels.');
           isUserAuthenticated = true;
+
+          // Hide the user password display for regular users
+          document.getElementById('user-password').style.display = 'none'; // Hide user password
         } else {
-          alert('Incorrect password!');
+          alert('Incorrect password. Please try again.');
         }
       }
     });
 
-    // Clear canvas button
+    // Clear canvas button functionality
     document.getElementById('clearCanvasButton').addEventListener('click', () => {
-      const confirmed = confirm('Are you sure you want to clear the canvas? This action cannot be undone!');
-      if (confirmed) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        remove(ref(database, 'pixels'));
-        alert('Canvas cleared!');
-      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      remove(ref(database, 'pixels')).then(() => {
+        console.log('Canvas cleared and database updated');
+      }).catch((error) => {
+        console.error('Error clearing canvas:', error);
+      });
     });
-
-    // Load existing pixels from the database
+    
+    // Load existing pixels from Firebase on page load
     onValue(ref(database, 'pixels'), (snapshot) => {
       const pixels = snapshot.val();
       if (pixels) {
-        Object.keys(pixels).forEach(key => {
+        for (const key in pixels) {
           const [x, y] = key.split(',').map(Number);
           ctx.fillStyle = pixels[key].color;
           ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-        });
+        }
       }
     });
-
-    // Display the weekly user password
-    const weeklyUserPassword = setWeeklyUserPassword();
-    document.getElementById('display-password').textContent = weeklyUserPassword;
-
   </script>
 </body>
 </html>
