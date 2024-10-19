@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js";
+import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -13,7 +13,6 @@ const firebaseConfig = {
   measurementId: "G-9VH085RDE1"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
@@ -34,13 +33,6 @@ function generateRandomPassword() {
     password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return password;
-}
-
-// Function to get current week number
-function getWeekNumber(date) {
-  const firstJan = new Date(date.getFullYear(), 0, 1);
-  const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
-  return Math.ceil((days + firstJan.getDay() + 1) / 7);
 }
 
 // Encrypt password using AES
@@ -70,6 +62,13 @@ function setWeeklyUserPassword() {
   } else {
     return decryptPassword(userPassword); // Return decrypted password
   }
+}
+
+// Get current week number
+function getWeekNumber(date) {
+  const firstJan = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+  return Math.ceil((days + firstJan.getDay() + 1) / 7);
 }
 
 // Set canvas size
@@ -172,25 +171,28 @@ document.getElementById('submitPassword').addEventListener('click', () => {
 document.getElementById('clearCanvasButton').addEventListener('click', () => {
   const confirmed = confirm('Are you sure you want to clear the canvas?');
   if (confirmed) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const pixelsRef = ref(database, 'pixels');
-    set(pixelsRef, null);
-    alert('Canvas cleared!');
-  }
-});
-
-// Load existing pixels from Firebase
-const pixelsRef = ref(database, 'pixels');
-onValue(pixelsRef, (snapshot) => {
-  const pixels = snapshot.val();
-  if (pixels) {
-    Object.keys(pixels).forEach((key) => {
-      const [x, y] = key.split(',').map(Number);
-      ctx.fillStyle = pixels[key].color;
-      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    const pixelsRef = ref(database, 'pixels/');
+    remove(pixelsRef).then(() => {
+      console.log('Canvas cleared in database');
+    }).catch((error) => {
+      console.error('Error clearing canvas:', error);
     });
   }
 });
 
-// Call function to generate or retrieve weekly password
-setWeeklyUserPassword();
+// Retrieve pixels from Firebase
+onValue(ref(database, 'pixels/'), (snapshot) => {
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas before drawing
+  snapshot.forEach(childSnapshot => {
+    const { color } = childSnapshot.val();
+    const [x, y] = childSnapshot.key.split(',').map(Number);
+    ctx.fillStyle = color;
+    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+  });
+});
+
+// Set the weekly user password for the first time
+const userPassword = setWeeklyUserPassword();
+document.getElementById('display-password').textContent = userPassword; // Display user password for admins
+document.getElementById('user-password').style.display = 'block'; // Show user password section
