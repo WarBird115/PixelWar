@@ -36,7 +36,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -49,138 +49,130 @@
       measurementId: "G-9VH085RDE1"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const cooldownTimer = document.getElementById('cooldown-timer');
-    const adminPassword = "Itsameamario1"; // Admin password
-    let userPassword; // Declare userPassword
-    const cooldownDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const adminPassword = "Itsameamario1";
+    let userPassword;
+    const cooldownDuration = 5 * 60 * 1000;
     let cooldownEndTime = null;
-    let isUserAuthenticated = false; // Track user authentication status
+    let isUserAuthenticated = false;
 
-    // Set the canvas size and pixel scaling
+    // Increase pixel size for visibility
+    const pixelSize = 10;
+
     const canvasWidth = 400;
     const canvasHeight = 400;
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    // Function to fetch the user password from Firebase
     function fetchUserPassword() {
       const passwordRef = ref(database, 'userPassword');
       onValue(passwordRef, (snapshot) => {
-        userPassword = snapshot.val(); // Get the password from Firebase
-        document.getElementById('display-password').textContent = userPassword; // Display user password
+        userPassword = snapshot.val();
+        document.getElementById('display-password').textContent = userPassword;
       });
     }
 
-    fetchUserPassword(); // Call the function to fetch the password
+    fetchUserPassword();
 
-    // Check for existing cooldown in localStorage
     const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
     if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
-        cooldownEndTime = parseInt(savedCooldownEndTime, 10);
-        updateCooldownTimer();
+      cooldownEndTime = parseInt(savedCooldownEndTime, 10);
+      updateCooldownTimer();
     }
 
-    // Function to update the cooldown timer
     function updateCooldownTimer() {
-        const interval = setInterval(() => {
-            const remainingTime = cooldownEndTime - Date.now();
-            if (remainingTime > 0) {
-                const minutes = Math.floor(remainingTime / 1000 / 60);
-                const seconds = Math.floor((remainingTime / 1000) % 60);
-                cooldownTimer.textContent = `Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            } else {
-                clearInterval(interval);
-                cooldownEndTime = null;
-                cooldownTimer.textContent = 'You can place a pixel now!';
-                localStorage.removeItem('cooldownEndTime');
-            }
-        }, 1000);
+      const interval = setInterval(() => {
+        const remainingTime = cooldownEndTime - Date.now();
+        if (remainingTime > 0) {
+          const minutes = Math.floor(remainingTime / 1000 / 60);
+          const seconds = Math.floor((remainingTime / 1000) % 60);
+          cooldownTimer.textContent = `Next pixel in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        } else {
+          clearInterval(interval);
+          cooldownEndTime = null;
+          cooldownTimer.textContent = 'You can place a pixel now!';
+          localStorage.removeItem('cooldownEndTime');
+        }
+      }, 1000);
     }
 
-    // Color Picker functionality
     const colorPicker = document.getElementById('colorPicker');
     let currentColor = colorPicker.value;
 
     colorPicker.addEventListener('input', function() {
-        currentColor = colorPicker.value;
+      currentColor = colorPicker.value;
     });
 
-    // Event listener to place a pixel on the canvas
     canvas.addEventListener('click', (e) => {
-        if (!isUserAuthenticated) {
-            alert('You must enter the correct password to place a pixel!');
-            return;
-        }
+      if (!isUserAuthenticated) {
+        alert('You must enter the correct password to place a pixel!');
+        return;
+      }
 
-        if (cooldownEndTime && Date.now() < cooldownEndTime) {
-            alert('You are still on cooldown!');
-            return;
-        }
+      if (cooldownEndTime && Date.now() < cooldownEndTime) {
+        alert('You are still on cooldown!');
+        return;
+      }
 
-        // Get the mouse position relative to the canvas
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width));
-        const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height));
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / (rect.width / canvas.width) / pixelSize);
+      const y = Math.floor((e.clientY - rect.top) / (rect.height / canvas.height) / pixelSize);
 
-        // Draw the pixel on the canvas
-        ctx.fillStyle = currentColor;
-        ctx.fillRect(x, y, 1, 1);
+      ctx.fillStyle = currentColor;
+      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
 
-        // Save the pixel to Firebase
-        const pixelRef = ref(database, `pixels/${x},${y}`);
-        set(pixelRef, { color: currentColor }).then(() => {
-            console.log('Pixel saved to Firebase');
-        }).catch((error) => {
-            console.error('Error saving pixel:', error);
-        });
+      const pixelRef = ref(database, `pixels/${x},${y}`);
+      set(pixelRef, { color: currentColor }).then(() => {
+        console.log('Pixel saved to Firebase');
+      }).catch((error) => {
+        console.error('Error saving pixel:', error);
+      });
 
-        // Set cooldown
-        cooldownEndTime = Date.now() + cooldownDuration;
-        localStorage.setItem('cooldownEndTime', cooldownEndTime);
-        updateCooldownTimer();
+      cooldownEndTime = Date.now() + cooldownDuration;
+      localStorage.setItem('cooldownEndTime', cooldownEndTime);
+      updateCooldownTimer();
     });
 
-    // Event listener for password submission
     document.getElementById('submitPassword').addEventListener('click', () => {
-        const passwordInput = document.getElementById('passwordInput').value;
-        if (passwordInput === adminPassword) {
-            // Show clear canvas button and user password if admin password is entered
-            document.getElementById('clearCanvasButton').style.display = 'inline';
-            alert('Admin access granted. You can now clear the canvas.');
-            isUserAuthenticated = true; // Allow the admin to place pixels
-            document.getElementById('user-password').style.display = 'block'; // Show user password div
-        } else if (passwordInput === userPassword) {
-            alert('User access granted. You can now place pixels!');
-            isUserAuthenticated = true; // Allow the user to place pixels
-        } else {
-            alert('Incorrect password!');
-        }
+      const passwordInput = document.getElementById('passwordInput').value;
+      if (passwordInput === adminPassword) {
+        document.getElementById('clearCanvasButton').style.display = 'inline';
+        alert('Admin access granted. You can now clear the canvas.');
+        isUserAuthenticated = true;
+        document.getElementById('user-password').style.display = 'block';
+      } else if (passwordInput === userPassword) {
+        alert('User access granted. You can now place pixels!');
+        isUserAuthenticated = true;
+      } else {
+        alert('Incorrect password!');
+      }
     });
 
-    // Clear canvas functionality
     document.getElementById('clearCanvasButton').addEventListener('click', () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      remove(ref(database, 'pixels')).then(() => {
         alert('Canvas cleared!');
+      }).catch((error) => {
+        console.error('Error clearing canvas:', error);
+      });
     });
 
-    // Firebase listener for real-time pixel updates
     const pixelsRef = ref(database, 'pixels');
     onValue(pixelsRef, (snapshot) => {
-        const pixels = snapshot.val();
-        if (pixels) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
-            for (const [key, value] of Object.entries(pixels)) {
-                const [x, y] = key.split(',').map(Number);
-                ctx.fillStyle = value.color;
-                ctx.fillRect(x, y, 1, 1); // Draw the pixel on the canvas
-            }
+      const pixels = snapshot.val();
+      if (pixels) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const [key, value] of Object.entries(pixels)) {
+          const [x, y] = key.split(',').map(Number);
+          ctx.fillStyle = value.color;
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
         }
+      }
     });
   </script>
 </body>
