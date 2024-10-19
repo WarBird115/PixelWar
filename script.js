@@ -149,10 +149,9 @@ document.getElementById('submitPassword').addEventListener('click', () => {
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Generate and log the encrypted weekly password for admin only
+    // Log the decrypted weekly password for admin only
     const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
-    const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
-    console.log('Weekly Encrypted Password:', encryptedPassword); // Log the encrypted password for admin only
+    console.log('Weekly User Password:', userPassword); // Log the decrypted password for admin only
 
   } else {
     const userPassword = setWeeklyUserPassword();
