@@ -66,9 +66,12 @@ function setWeeklyUserPassword() {
     const encryptedPassword = encryptPassword(newPassword);
     localStorage.setItem('userPassword', encryptedPassword);
     localStorage.setItem('storedWeek', currentWeek);
+    console.log("Generated and encrypted new password:", encryptedPassword); // Log the encrypted password
     return newPassword; // Return newly generated password for this week
   } else {
-    return decryptPassword(userPassword); // Return decrypted password
+    const decryptedPassword = decryptPassword(userPassword); // Return decrypted password
+    console.log("Decrypted password:", decryptedPassword); // Log the decrypted password
+    return decryptedPassword;
   }
 }
 
@@ -151,7 +154,7 @@ document.getElementById('submitPassword').addEventListener('click', () => {
 
     // Log the decrypted weekly password for admin only
     const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
-    console.log('Weekly User Password:', userPassword); // Log the decrypted password for admin only
+    console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password for admin only
 
   } else {
     const userPassword = setWeeklyUserPassword();
