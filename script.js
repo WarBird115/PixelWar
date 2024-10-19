@@ -66,12 +66,9 @@ function setWeeklyUserPassword() {
     const encryptedPassword = encryptPassword(newPassword);
     localStorage.setItem('userPassword', encryptedPassword);
     localStorage.setItem('storedWeek', currentWeek);
-    console.log("Generated and encrypted new password:", encryptedPassword); // Log the encrypted password
     return newPassword; // Return newly generated password for this week
   } else {
-    const decryptedPassword = decryptPassword(userPassword); // Return decrypted password
-    console.log("Decrypted password:", decryptedPassword); // Log the decrypted password
-    return decryptedPassword;
+    return decryptPassword(userPassword); // Return decrypted password
   }
 }
 
@@ -147,14 +144,18 @@ canvas.addEventListener('click', (e) => {
 document.getElementById('submitPassword').addEventListener('click', () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
+  console.log('Password Input:', passwordInput); // Log the entered password
+
   if (passwordInput === adminPassword) {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Log the decrypted weekly password for admin only
+    // Generate and log the encrypted weekly password for admin only
     const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
-    console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password for admin only
+    const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
+    console.log('Weekly Encrypted Password:', encryptedPassword); // Log the encrypted password for admin only
+    console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password
 
   } else {
     const userPassword = setWeeklyUserPassword();
