@@ -139,6 +139,23 @@ canvas.addEventListener('click', (e) => {
   updateCooldownTimer();
 });
 
+// Right-click to copy pixel color
+canvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault(); // Prevent the context menu from appearing
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / pixelSize);
+  const y = Math.floor((e.clientY - rect.top) / pixelSize);
+
+  const imageData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
+  const color = `rgba(${imageData[0]}, ${imageData[1]}, ${imageData[2]}, ${imageData[3] / 255})`;
+
+  navigator.clipboard.writeText(color).then(() => {
+    alert(`Color ${color} copied to clipboard!`);
+  }).catch((error) => {
+    console.error('Error copying color:', error);
+  });
+});
+
 // Password submission
 document.getElementById('submitPassword').addEventListener('click', () => {
   const passwordInput = document.getElementById('passwordInput').value;
@@ -148,9 +165,11 @@ document.getElementById('submitPassword').addEventListener('click', () => {
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Generate the weekly password for admin only
+    // Generate and log the encrypted weekly password for admin only
     const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
-    console.log('Weekly Encrypted Password (for Admin):', encryptPassword(userPassword)); // Admin sees the encrypted password
+    const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
+    // Admin sees the encrypted password but it won't be displayed anywhere else
+    console.log('Weekly Encrypted Password (for Admin):', encryptedPassword); 
 
   } else {
     const userPassword = setWeeklyUserPassword();
