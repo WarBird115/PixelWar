@@ -143,8 +143,6 @@ canvas.addEventListener('click', (e) => {
 document.getElementById('submitPassword').addEventListener('click', () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
-  console.log('Password Input:', passwordInput); // Log the entered password
-
   if (passwordInput === adminPassword) {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
@@ -153,8 +151,8 @@ document.getElementById('submitPassword').addEventListener('click', () => {
     // Generate and log the encrypted weekly password for admin only
     const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
     const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
-    console.log('Weekly Encrypted Password:', encryptedPassword); // Log the encrypted password for admin only
-    console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password
+    // Admin sees the encrypted password but it won't be displayed anywhere else
+    console.log('Weekly Encrypted Password (for Admin):', encryptedPassword); 
 
   } else {
     const userPassword = setWeeklyUserPassword();
@@ -193,6 +191,4 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
 });
 
 // Set the weekly user password for the first time
-const userPassword = setWeeklyUserPassword();
-document.getElementById('display-password').textContent = userPassword; // Display user password for admins
-document.getElementById('user-password').style.display = 'block'; // Show user password section
+setWeeklyUserPassword();
