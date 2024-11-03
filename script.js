@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
 
 const firebaseConfig = {
@@ -37,27 +37,34 @@ function generateRandomPassword() {
 
 // Encrypt password using AES
 function encryptPassword(password) {
-  return CryptoJS.AES.encrypt(password, 'your-secret-key').toString();
+  return CryptoJS.AES.encrypt(password, 'aVeryStrongSecretKey!123').toString();
 }
 
 // Decrypt password
 function decryptPassword(encryptedPassword) {
-  const bytes = CryptoJS.AES.decrypt(encryptedPassword, 'your-secret-key');
+  const bytes = CryptoJS.AES.decrypt(encryptedPassword, 'aVeryStrongSecretKey!123');
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
-// Function to set weekly user password in localStorage
-function setWeeklyUserPassword() {
+// Function to set weekly user password in Firebase
+async function setWeeklyUserPassword() {
   const now = new Date();
   const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now);
-  const storedWeek = localStorage.getItem('storedWeek');
-  let userPassword = localStorage.getItem('userPassword');
+  const storedWeekRef = ref(database, 'storedWeek');
+  const userPasswordRef = ref(database, 'userPassword');
+
+  // Get the current stored week and user password from Firebase
+  const storedWeekSnapshot = await get(storedWeekRef);
+  const storedWeek = storedWeekSnapshot.val();
+  const userPasswordSnapshot = await get(userPasswordRef);
+  let userPassword = userPasswordSnapshot.val();
 
   if (storedWeek !== currentWeek || !userPassword) {
     const newPassword = generateRandomPassword();
     const encryptedPassword = encryptPassword(newPassword);
-    localStorage.setItem('userPassword', encryptedPassword);
-    localStorage.setItem('storedWeek', currentWeek);
+    // Store the new password and current week in Firebase
+    await set(userPasswordRef, encryptedPassword);
+    await set(storedWeekRef, currentWeek);
     return newPassword; // Return newly generated password for this week
   } else {
     return decryptPassword(userPassword); // Return decrypted password
@@ -157,7 +164,7 @@ canvas.addEventListener('contextmenu', (e) => {
 });
 
 // Password submission
-document.getElementById('submitPassword').addEventListener('click', () => {
+document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
   if (passwordInput === adminPassword) {
@@ -166,13 +173,13 @@ document.getElementById('submitPassword').addEventListener('click', () => {
     isUserAuthenticated = true;
 
     // Generate and log the encrypted weekly password for admin only
-    const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
+    const userPassword = await setWeeklyUserPassword(); // Generate or retrieve the weekly password
     const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
     // Admin sees the encrypted password but it won't be displayed anywhere else
     console.log('Weekly Encrypted Password (for Admin):', encryptedPassword); 
 
   } else {
-    const userPassword = setWeeklyUserPassword();
+    const userPassword = await setWeeklyUserPassword();
     if (passwordInput === userPassword) {
       alert('User access granted. You can now place pixels!');
       isUserAuthenticated = true;
