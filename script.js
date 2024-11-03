@@ -84,11 +84,14 @@ const canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-// Check for cooldown in localStorage
-const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
-if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
-  cooldownEndTime = parseInt(savedCooldownEndTime, 10);
-  updateCooldownTimer();
+// Check for cooldown
+if (localStorage.getItem('cooldownEndTime')) {
+  cooldownEndTime = parseInt(localStorage.getItem('cooldownEndTime'), 10);
+  if (Date.now() < cooldownEndTime) {
+    updateCooldownTimer();
+  } else {
+    localStorage.removeItem('cooldownEndTime');
+  }
 }
 
 // Function to update the cooldown timer
@@ -175,8 +178,10 @@ document.getElementById('submitPassword').addEventListener('click', async () => 
     // Generate and log the encrypted weekly password for admin only
     const userPassword = await setWeeklyUserPassword(); // Generate or retrieve the weekly password
     const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
-    // Admin sees the encrypted password but it won't be displayed anywhere else
     console.log('Weekly Encrypted Password (for Admin):', encryptedPassword); 
+
+    // Show the decrypted password on the webpage for admin
+    document.getElementById('display-password').textContent = userPassword;
 
   } else {
     const userPassword = await setWeeklyUserPassword();
@@ -207,12 +212,12 @@ document.getElementById('clearCanvasButton').addEventListener('click', () => {
 onValue(ref(database, 'pixels/'), (snapshot) => {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas before drawing
   snapshot.forEach(childSnapshot => {
-    const { color } = childSnapshot.val();
+    const pixelData = childSnapshot.val();
     const [x, y] = childSnapshot.key.split(',').map(Number);
-    ctx.fillStyle = color;
+    ctx.fillStyle = pixelData.color;
     ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
   });
 });
 
-// Set the weekly user password for the first time
+// Call the function to set the weekly user password when the script is initialized
 setWeeklyUserPassword();
