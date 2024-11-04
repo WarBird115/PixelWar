@@ -16,6 +16,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
+// Initialize storedDate and userPassword in Firebase if they don't already exist
+async function setInitialStoredData() {
+  const storedDateRef = ref(database, 'storedData/storedDate');
+  const userPasswordRef = ref(database, 'storedData/userPassword');
+
+  const storedDateSnapshot = await get(storedDateRef);
+  const userPasswordSnapshot = await get(userPasswordRef);
+
+  // Check if the data already exists
+  if (!storedDateSnapshot.exists()) {
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    await set(storedDateRef, currentDate);
+  }
+
+  if (!userPasswordSnapshot.exists()) {
+    const newPassword = generateRandomPassword();
+    const encryptedPassword = encryptPassword(newPassword);
+    await set(userPasswordRef, encryptedPassword);
+    console.log("Initial user password set in Firebase:", newPassword); // Debug log for initial password
+  }
+}
+
+setInitialStoredData();
+
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
