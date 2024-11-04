@@ -59,6 +59,7 @@ async function setWeeklyUserPassword() {
   const userPasswordSnapshot = await get(userPasswordRef);
   let userPassword = userPasswordSnapshot.val();
 
+  // Check if the password needs to be changed
   if (storedWeek !== currentWeek || !userPassword) {
     const newPassword = generateRandomPassword();
     const encryptedPassword = encryptPassword(newPassword);
@@ -216,11 +217,4 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
     ctx.fillStyle = pixelData.color;
     ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
   });
-});
-
-// Initial call to set the weekly user password
-setWeeklyUserPassword().then(userPassword => {
-  console.log('Weekly User Password (for internal use):', userPassword);
-}).catch(error => {
-  console.error('Error setting weekly password:', error);
 });
