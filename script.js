@@ -178,10 +178,9 @@ document.getElementById('submitPassword').addEventListener('click', async () => 
     // Generate and log the encrypted weekly password for admin only
     const userPassword = await setWeeklyUserPassword(); // Generate or retrieve the weekly password
     const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
-    console.log('Weekly Encrypted Password (for Admin):', encryptedPassword); 
 
-    // Show the decrypted password on the webpage for admin
-    document.getElementById('display-password').textContent = userPassword;
+    // Only log the decrypted password for the admin
+    console.log('Weekly User Password (for Admin):', userPassword); // Log for admin visibility
 
   } else {
     const userPassword = await setWeeklyUserPassword();
@@ -219,7 +218,7 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
   });
 });
 
-// Call the function to set the initial user password for the week
+// Initial call to set the weekly user password
 setWeeklyUserPassword().then(userPassword => {
   console.log('Weekly User Password (for internal use):', userPassword);
 }).catch(error => {
