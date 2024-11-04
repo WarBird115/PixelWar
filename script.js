@@ -24,6 +24,7 @@ const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
+let userPassword; // Store the current user password
 
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
@@ -57,19 +58,21 @@ async function setWeeklyUserPassword() {
   const storedWeekSnapshot = await get(storedWeekRef);
   const storedWeek = storedWeekSnapshot.val();
   const userPasswordSnapshot = await get(userPasswordRef);
-  let userPassword = userPasswordSnapshot.val();
+  const storedUserPassword = userPasswordSnapshot.val();
 
   // Check if the password needs to be changed
-  if (storedWeek !== currentWeek || !userPassword) {
+  if (storedWeek !== currentWeek || !storedUserPassword) {
     const newPassword = generateRandomPassword();
     const encryptedPassword = encryptPassword(newPassword);
     // Store the new password and current week in Firebase
     await set(userPasswordRef, encryptedPassword);
     await set(storedWeekRef, currentWeek);
-    return newPassword; // Return newly generated password for this week
+    userPassword = newPassword; // Store newly generated password for this week
   } else {
-    return decryptPassword(userPassword); // Return decrypted password
+    userPassword = decryptPassword(storedUserPassword); // Decrypt and store existing password
   }
+
+  return userPassword; // Return the user password
 }
 
 // Get current week number
@@ -171,21 +174,18 @@ canvas.addEventListener('contextmenu', (e) => {
 document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
+  // Fetch the weekly user password before checking against admin password
+  const weeklyPassword = await setWeeklyUserPassword();
+
   if (passwordInput === adminPassword) {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Generate and log the encrypted weekly password for admin only
-    const userPassword = await setWeeklyUserPassword(); // Generate or retrieve the weekly password
-    const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
-
-    // Only log the decrypted password for the admin
-    console.log('Weekly User Password (for Admin):', userPassword); // Log for admin visibility
-
+    // Log the encrypted weekly password for admin only
+    console.log('Weekly User Password (for Admin):', weeklyPassword); // Log for admin visibility
   } else {
-    const userPassword = await setWeeklyUserPassword();
-    if (passwordInput === userPassword) {
+    if (passwordInput === weeklyPassword) {
       alert('User access granted. You can now place pixels!');
       isUserAuthenticated = true;
     } else {
@@ -218,3 +218,6 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
     ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
   });
 });
+
+// Initialize weekly password on page load
+setWeeklyUserPassword();
