@@ -19,14 +19,14 @@ const database = getDatabase(app);
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
-const adminPassword = "The0verseer"; // Admin password
-const pixelSize = 10; // Pixel size
+const adminPassword = "The0verseer"; // Admin password (constant)
+const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
 let userPassword = ''; // Store the user password
 
-// Generate a random alphanumeric password
+// Function to generate a random alphanumeric password
 function generateRandomPassword() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let password = '';
@@ -36,58 +36,56 @@ function generateRandomPassword() {
   return password;
 }
 
-// Encrypt and decrypt password using AES
+// Encrypt password using AES
 function encryptPassword(password) {
   return CryptoJS.AES.encrypt(password, 'aVeryStrongSecretKey!123').toString();
 }
 
+// Decrypt password
 function decryptPassword(encryptedPassword) {
   const bytes = CryptoJS.AES.decrypt(encryptedPassword, 'aVeryStrongSecretKey!123');
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
-// Set or retrieve weekly user password from Firebase
+// Function to set weekly user password in Firebase
 async function setWeeklyUserPassword() {
   const now = new Date();
-  const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now);
-  const storedWeekRef = ref(database, 'storedWeek');
+  const currentTime = now.getTime();
+  const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  const storedDateRef = ref(database, 'storedDate');
   const userPasswordRef = ref(database, 'userPassword');
 
-  // Retrieve stored week and user password from Firebase
-  const storedWeekSnapshot = await get(storedWeekRef);
-  const storedWeek = storedWeekSnapshot.val();
+  // Get the stored date and user password from Firebase
+  const storedDateSnapshot = await get(storedDateRef);
+  const storedDate = storedDateSnapshot.val();
   const userPasswordSnapshot = await get(userPasswordRef);
   const encryptedPassword = userPasswordSnapshot.val();
 
-  if (storedWeek !== currentWeek || !encryptedPassword) {
+  console.log('Stored date:', storedDate); // Debug log
+  console.log('Current date:', currentDate); // Debug log
+
+  // Check if the password needs to be changed (only on weekends)
+  if (storedDate !== currentDate && now.getDay() === 0) { // Sunday
     const newPassword = generateRandomPassword();
     const encryptedNewPassword = encryptPassword(newPassword);
+    // Store the new password and current date in Firebase
     await set(userPasswordRef, encryptedNewPassword);
-    await set(storedWeekRef, currentWeek);
-    userPassword = newPassword;
-    console.log('New weekly password set:', newPassword); // For debugging
+    await set(storedDateRef, currentDate);
+    userPassword = newPassword; // Store the newly generated password for this week
+    console.log('New password generated and stored:', newPassword); // Debug log
   } else {
-    userPassword = decryptPassword(encryptedPassword);
-    console.log('Existing weekly password retrieved:', userPassword); // For debugging
+    userPassword = decryptPassword(encryptedPassword); // Retrieve and decrypt the existing password
+    console.log('Existing password retrieved:', userPassword); // Debug log
   }
 }
 
-// Get current week number
-function getWeekNumber(date) {
-  const firstJan = new Date(date.getFullYear(), 0, 1);
-  const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
-  return Math.ceil((days + firstJan.getDay() + 1) / 7);
-}
-
-// Call to initialize the weekly password on page load
-setWeeklyUserPassword();
-
-// Set canvas size and check for cooldown
+// Set canvas size
 const canvasWidth = 400;
 const canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
+// Check for cooldown
 if (localStorage.getItem('cooldownEndTime')) {
   cooldownEndTime = parseInt(localStorage.getItem('cooldownEndTime'), 10);
   if (Date.now() < cooldownEndTime) {
@@ -97,7 +95,7 @@ if (localStorage.getItem('cooldownEndTime')) {
   }
 }
 
-// Update cooldown timer
+// Function to update the cooldown timer
 function updateCooldownTimer() {
   const interval = setInterval(() => {
     const remainingTime = cooldownEndTime - Date.now();
@@ -121,12 +119,13 @@ colorPicker.addEventListener('input', () => {
   currentColor = colorPicker.value;
 });
 
-// Place pixel on canvas
+// Canvas click to place a pixel
 canvas.addEventListener('click', (e) => {
   if (!isUserAuthenticated) {
     alert('You must enter the correct password to place a pixel!');
     return;
   }
+
   if (cooldownEndTime && Date.now() < cooldownEndTime) {
     alert('You are still on cooldown!');
     return;
@@ -141,17 +140,21 @@ canvas.addEventListener('click', (e) => {
 
   const pixelRef = ref(database, `pixels/${x},${y}`);
   set(pixelRef, { color: currentColor })
-    .then(() => console.log('Pixel saved'))
-    .catch((error) => console.error('Error saving pixel:', error));
+    .then(() => {
+      console.log('Pixel saved');
+    })
+    .catch((error) => {
+      console.error('Error saving pixel:', error);
+    });
 
   cooldownEndTime = Date.now() + cooldownDuration;
   localStorage.setItem('cooldownEndTime', cooldownEndTime);
   updateCooldownTimer();
 });
 
-// Copy pixel color
+// Right-click to copy pixel color
 canvas.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
+  e.preventDefault(); // Prevent the context menu from appearing
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left) / pixelSize);
   const y = Math.floor((e.clientY - rect.top) / pixelSize);
@@ -161,20 +164,27 @@ canvas.addEventListener('contextmenu', (e) => {
 
   navigator.clipboard.writeText(color).then(() => {
     alert(`Color ${color} copied to clipboard!`);
-  }).catch((error) => console.error('Error copying color:', error));
+  }).catch((error) => {
+    console.error('Error copying color:', error);
+  });
 });
 
-// Password authentication
+// Password submission
 document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
-  await setWeeklyUserPassword();
+  await setWeeklyUserPassword(); // Ensure the user password is set before validating input
+
+  console.log('Password input:', passwordInput); // Debug log
 
   if (passwordInput === adminPassword) {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
-    console.log('Weekly User Password (for Admin):', userPassword);
+
+    // Log the decrypted weekly password for admin only
+    console.log('Weekly User Password (for Admin):', userPassword); // Log for admin visibility
+
   } else if (passwordInput === userPassword) {
     alert('User access granted. You can now place pixels!');
     isUserAuthenticated = true;
@@ -183,10 +193,31 @@ document.getElementById('submitPassword').addEventListener('click', async () => 
   }
 });
 
-// Clear canvas
+// Clear canvas button
 document.getElementById('clearCanvasButton').addEventListener('click', () => {
-  if (confirm('Are you sure you want to clear the canvas?')) {
+  const confirmed = confirm('Are you sure you want to clear the canvas?');
+  if (confirmed) {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    remove(ref(database, 'pixels')).then(() => console.log('Canvas cleared')).catch((error) => console.error('Error clearing canvas:', error));
+    const pixelsRef = ref(database, 'pixels/');
+    remove(pixelsRef).then(() => {
+      console.log('Canvas cleared in database');
+    }).catch((error) => {
+      console.error('Error clearing canvas:', error);
+    });
   }
 });
+
+// Retrieve pixels from Firebase
+onValue(ref(database, 'pixels/'), (snapshot) => {
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas before drawing
+  snapshot.forEach((childSnapshot) => {
+    const pixel = childSnapshot.val();
+    const [x, y] = childSnapshot.key.split(',').map(Number);
+    ctx.fillStyle = pixel.color;
+    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+  });
+});
+
+// Initialize the password upon loading
+setWeeklyUserPassword();
+
