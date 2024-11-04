@@ -23,33 +23,7 @@ const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-let userPassword = ''; // Store the user password
-
-// Function to set weekly user password in Firebase
-async function setWeeklyUserPassword() {
-  const now = new Date();
-  const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-  const storedDateRef = ref(database, 'storedData/storedDate');
-  const userPasswordRef = ref(database, 'storedData/userPassword');
-
-  // Get the stored date and user password from Firebase
-  const storedDateSnapshot = await get(storedDateRef);
-  const storedDate = storedDateSnapshot.val();
-  const userPasswordSnapshot = await get(userPasswordRef);
-  const encryptedPassword = userPasswordSnapshot.val();
-
-  // Check if the password needs to be changed (only on Sundays)
-  if (storedDate !== currentDate && now.getDay() === 0) { // Check if it's Sunday
-    const newPassword = generateRandomPassword();
-    await set(userPasswordRef, newPassword);
-    await set(storedDateRef, currentDate);
-    userPassword = newPassword; // Store the newly generated password for this week
-    console.log('New password generated and stored:', newPassword); // Debug log
-  } else if (encryptedPassword) {
-    userPassword = encryptedPassword; // Retrieve the existing password
-    console.log('Existing password retrieved:', userPassword); // Debug log
-  }
-}
+let userPassword = '12345'; // Fixed user password
 
 // Set canvas size
 const canvasWidth = 400;
@@ -145,8 +119,6 @@ canvas.addEventListener('contextmenu', (e) => {
 document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
-  await setWeeklyUserPassword(); // Ensure the user password is set before validating input
-
   console.log('Password input:', passwordInput); // Debug log
 
   if (passwordInput === adminPassword) {
@@ -154,7 +126,7 @@ document.getElementById('submitPassword').addEventListener('click', async () => 
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Show the new weekly password for admin
+    // Show the weekly user password for admin
     alert(`Weekly User Password: ${userPassword}`); // Displaying for admin visibility
 
   } else if (passwordInput === userPassword) {
@@ -191,4 +163,3 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
 });
 
 // Initialize the password upon loading
-setWeeklyUserPassword();
