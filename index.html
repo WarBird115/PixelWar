@@ -91,22 +91,12 @@
       return bytes.toString(CryptoJS.enc.Utf8);
     }
 
-    // Function to set weekly user password in localStorage
+    // Function to set weekly user password
     function setWeeklyUserPassword() {
       const now = new Date();
       const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now);
-      const storedWeek = localStorage.getItem('storedWeek');
-      let userPassword = localStorage.getItem('userPassword');
-
-      if (storedWeek !== currentWeek || !userPassword) {
-        const newPassword = generateRandomPassword();
-        const encryptedPassword = encryptPassword(newPassword);
-        localStorage.setItem('userPassword', encryptedPassword);
-        localStorage.setItem('storedWeek', currentWeek);
-        return newPassword; // Return newly generated password for this week
-      } else {
-        return decryptPassword(userPassword); // Return decrypted password
-      }
+      const userPassword = generateRandomPassword(); // Generate a new password
+      return userPassword; // Return newly generated password for this week
     }
 
     // Get current week number
@@ -195,10 +185,8 @@
         alert('Admin access granted. You can now clear the canvas.');
         isUserAuthenticated = true;
 
-        // Generate and log the encrypted weekly password for admin only
-        const userPassword = setWeeklyUserPassword(); // Generate or retrieve the weekly password
-        const encryptedPassword = encryptPassword(userPassword); // Encrypt the password
-        console.log('Weekly Encrypted Password:', encryptedPassword); // Log the encrypted password for admin only
+        // Generate the weekly password for admin only
+        const userPassword = setWeeklyUserPassword(); // Generate the weekly password
         console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password
         
         // Display the user password on the webpage
@@ -217,20 +205,20 @@
       const pixelsRef = ref(database, 'pixels');
       remove(pixelsRef).then(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        alert('Canvas cleared successfully!');
+        alert('Canvas cleared!');
       }).catch((error) => {
         console.error('Error clearing canvas:', error);
       });
     });
 
-    // Listen for pixel updates from Firebase
+    // Firebase data listener for pixels
     onValue(ref(database, 'pixels'), (snapshot) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before rendering
-      snapshot.forEach((childSnapshot) => {
-        const { color } = childSnapshot.val();
-        const [x, y] = childSnapshot.key.split(',').map(Number);
-        ctx.fillStyle = color;
-        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
+      snapshot.forEach(childSnapshot => {
+        const pixelData = childSnapshot.val();
+        const coords = childSnapshot.key.split(',');
+        ctx.fillStyle = pixelData.color;
+        ctx.fillRect(coords[0] * pixelSize, coords[1] * pixelSize, pixelSize, pixelSize);
       });
     });
 
