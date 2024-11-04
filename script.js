@@ -23,7 +23,33 @@ const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-let userPassword = '12345'; // Fixed user password
+let userPassword = ''; // Store the user password
+
+// Function to set weekly user password in Firebase
+async function setWeeklyUserPassword() {
+  const now = new Date();
+  const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  const storedDateRef = ref(database, 'storedData/storedDate');
+  const userPasswordRef = ref(database, 'storedData/userPassword');
+
+  // Get the stored date and user password from Firebase
+  const storedDateSnapshot = await get(storedDateRef);
+  const storedDate = storedDateSnapshot.val();
+  const userPasswordSnapshot = await get(userPasswordRef);
+  const encryptedPassword = userPasswordSnapshot.val();
+
+  // Check if the password needs to be changed (only on Sundays)
+  if (storedDate !== currentDate && now.getDay() === 0) { // Check if it's Sunday
+    const newPassword = generateRandomPassword();
+    await set(userPasswordRef, newPassword);
+    await set(storedDateRef, currentDate);
+    userPassword = newPassword; // Store the newly generated password for this week
+    console.log('New password generated and stored:', newPassword); // Debug log
+  } else if (encryptedPassword) {
+    userPassword = encryptedPassword; // Retrieve the existing password
+    console.log('Existing password retrieved:', userPassword); // Debug log
+  }
+}
 
 // Set canvas size
 const canvasWidth = 400;
@@ -119,6 +145,8 @@ canvas.addEventListener('contextmenu', (e) => {
 document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
+  await setWeeklyUserPassword(); // Ensure the user password is set before validating input
+
   console.log('Password input:', passwordInput); // Debug log
 
   if (passwordInput === adminPassword) {
@@ -126,7 +154,7 @@ document.getElementById('submitPassword').addEventListener('click', async () => 
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Show the weekly user password for admin
+    // Show the new weekly password for admin
     alert(`Weekly User Password: ${userPassword}`); // Displaying for admin visibility
 
   } else if (passwordInput === userPassword) {
@@ -151,15 +179,14 @@ document.getElementById('clearCanvasButton').addEventListener('click', () => {
   }
 });
 
-// Retrieve pixels from Firebase
+// Load pixels from Firebase on startup
 onValue(ref(database, 'pixels/'), (snapshot) => {
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas before drawing
-  snapshot.forEach((childSnapshot) => {
-    const pixel = childSnapshot.val();
-    const [x, y] = childSnapshot.key.split(',').map(Number);
-    ctx.fillStyle = pixel.color;
-    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-  });
+  const pixels = snapshot.val();
+  if (pixels) {
+    Object.keys(pixels).forEach((key) => {
+      const [x, y] = key.split(',').map(Number);
+      ctx.fillStyle = pixels[key].color;
+      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    });
+  }
 });
-
-// Initialize the password upon loading
