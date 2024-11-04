@@ -64,8 +64,8 @@ async function setWeeklyUserPassword() {
   console.log('Stored date:', storedDate); // Debug log
   console.log('Current date:', currentDate); // Debug log
 
-  // Check if the password needs to be changed (only on weekends)
-  if (storedDate !== currentDate && now.getDay() === 0) { // Sunday
+  // Check if the password needs to be changed (only on Sundays)
+  if (storedDate !== currentDate && now.getDay() === 0) { // Check if it's Sunday
     const newPassword = generateRandomPassword();
     const encryptedNewPassword = encryptPassword(newPassword);
     // Store the new password and current date in Firebase
@@ -73,7 +73,7 @@ async function setWeeklyUserPassword() {
     await set(storedDateRef, currentDate);
     userPassword = newPassword; // Store the newly generated password for this week
     console.log('New password generated and stored:', newPassword); // Debug log
-  } else {
+  } else if (encryptedPassword) {
     userPassword = decryptPassword(encryptedPassword); // Retrieve and decrypt the existing password
     console.log('Existing password retrieved:', userPassword); // Debug log
   }
@@ -220,4 +220,3 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
 
 // Initialize the password upon loading
 setWeeklyUserPassword();
-
