@@ -219,5 +219,9 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
   });
 });
 
-// Call the function to set the weekly user password when the script is initialized
-setWeeklyUserPassword();
+// Call the function to set the initial user password for the week
+setWeeklyUserPassword().then(userPassword => {
+  console.log('Weekly User Password (for internal use):', userPassword);
+}).catch(error => {
+  console.error('Error setting weekly password:', error);
+});
