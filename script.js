@@ -24,7 +24,7 @@ const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-let userPassword; // Store the current user password
+let userPassword = ''; // Store the user password
 
 // Function to generate a random alphanumeric password
 function generateRandomPassword() {
@@ -58,21 +58,19 @@ async function setWeeklyUserPassword() {
   const storedWeekSnapshot = await get(storedWeekRef);
   const storedWeek = storedWeekSnapshot.val();
   const userPasswordSnapshot = await get(userPasswordRef);
-  const storedUserPassword = userPasswordSnapshot.val();
+  const encryptedPassword = userPasswordSnapshot.val();
 
   // Check if the password needs to be changed
-  if (storedWeek !== currentWeek || !storedUserPassword) {
+  if (storedWeek !== currentWeek || !encryptedPassword) {
     const newPassword = generateRandomPassword();
-    const encryptedPassword = encryptPassword(newPassword);
+    const encryptedNewPassword = encryptPassword(newPassword);
     // Store the new password and current week in Firebase
-    await set(userPasswordRef, encryptedPassword);
+    await set(userPasswordRef, encryptedNewPassword);
     await set(storedWeekRef, currentWeek);
-    userPassword = newPassword; // Store newly generated password for this week
+    userPassword = newPassword; // Store the newly generated password for this week
   } else {
-    userPassword = decryptPassword(storedUserPassword); // Decrypt and store existing password
+    userPassword = decryptPassword(encryptedPassword); // Retrieve and decrypt the existing password
   }
-
-  return userPassword; // Return the user password
 }
 
 // Get current week number
@@ -174,23 +172,21 @@ canvas.addEventListener('contextmenu', (e) => {
 document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
-  // Fetch the weekly user password before checking against admin password
-  const weeklyPassword = await setWeeklyUserPassword();
+  await setWeeklyUserPassword(); // Ensure the user password is set before validating input
 
   if (passwordInput === adminPassword) {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Log the encrypted weekly password for admin only
-    console.log('Weekly User Password (for Admin):', weeklyPassword); // Log for admin visibility
+    // Log the decrypted weekly password for admin only
+    console.log('Weekly User Password (for Admin):', userPassword); // Log for admin visibility
+
+  } else if (passwordInput === userPassword) {
+    alert('User access granted. You can now place pixels!');
+    isUserAuthenticated = true;
   } else {
-    if (passwordInput === weeklyPassword) {
-      alert('User access granted. You can now place pixels!');
-      isUserAuthenticated = true;
-    } else {
-      alert('Incorrect password!');
-    }
+    alert('Incorrect password!');
   }
 });
 
@@ -219,5 +215,5 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
   });
 });
 
-// Initialize weekly password on page load
+// Initialize user password
 setWeeklyUserPassword();
