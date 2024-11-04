@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -16,31 +15,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Initialize storedDate and userPassword in Firebase if they don't already exist
-async function setInitialStoredData() {
-  const storedDateRef = ref(database, 'storedData/storedDate');
-  const userPasswordRef = ref(database, 'storedData/userPassword');
-
-  const storedDateSnapshot = await get(storedDateRef);
-  const userPasswordSnapshot = await get(userPasswordRef);
-
-  // Check if the data already exists
-  if (!storedDateSnapshot.exists()) {
-    const now = new Date();
-    const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    await set(storedDateRef, currentDate);
-  }
-
-  if (!userPasswordSnapshot.exists()) {
-    const newPassword = generateRandomPassword();
-    const encryptedPassword = encryptPassword(newPassword);
-    await set(userPasswordRef, encryptedPassword);
-    console.log("Initial user password set in Firebase:", newPassword); // Debug log for initial password
-  }
-}
-
-setInitialStoredData();
-
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
@@ -51,34 +25,12 @@ let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
 let userPassword = ''; // Store the user password
 
-// Function to generate a random alphanumeric password
-function generateRandomPassword() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let password = '';
-  for (let i = 0; i < 5; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
-
-// Encrypt password using AES
-function encryptPassword(password) {
-  return CryptoJS.AES.encrypt(password, 'aVeryStrongSecretKey!123').toString();
-}
-
-// Decrypt password
-function decryptPassword(encryptedPassword) {
-  const bytes = CryptoJS.AES.decrypt(encryptedPassword, 'aVeryStrongSecretKey!123');
-  return bytes.toString(CryptoJS.enc.Utf8);
-}
-
 // Function to set weekly user password in Firebase
 async function setWeeklyUserPassword() {
   const now = new Date();
-  const currentTime = now.getTime();
   const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-  const storedDateRef = ref(database, 'storedDate');
-  const userPasswordRef = ref(database, 'userPassword');
+  const storedDateRef = ref(database, 'storedData/storedDate');
+  const userPasswordRef = ref(database, 'storedData/userPassword');
 
   // Get the stored date and user password from Firebase
   const storedDateSnapshot = await get(storedDateRef);
@@ -86,20 +38,15 @@ async function setWeeklyUserPassword() {
   const userPasswordSnapshot = await get(userPasswordRef);
   const encryptedPassword = userPasswordSnapshot.val();
 
-  console.log('Stored date:', storedDate); // Debug log
-  console.log('Current date:', currentDate); // Debug log
-
   // Check if the password needs to be changed (only on Sundays)
   if (storedDate !== currentDate && now.getDay() === 0) { // Check if it's Sunday
     const newPassword = generateRandomPassword();
-    const encryptedNewPassword = encryptPassword(newPassword);
-    // Store the new password and current date in Firebase
-    await set(userPasswordRef, encryptedNewPassword);
+    await set(userPasswordRef, newPassword);
     await set(storedDateRef, currentDate);
     userPassword = newPassword; // Store the newly generated password for this week
     console.log('New password generated and stored:', newPassword); // Debug log
   } else if (encryptedPassword) {
-    userPassword = decryptPassword(encryptedPassword); // Retrieve and decrypt the existing password
+    userPassword = encryptedPassword; // Retrieve the existing password
     console.log('Existing password retrieved:', userPassword); // Debug log
   }
 }
@@ -207,8 +154,8 @@ document.getElementById('submitPassword').addEventListener('click', async () => 
     alert('Admin access granted. You can now clear the canvas.');
     isUserAuthenticated = true;
 
-    // Log the decrypted weekly password for admin only
-    console.log('Weekly User Password (for Admin):', userPassword); // Log for admin visibility
+    // Show the new weekly password for admin
+    alert(`Weekly User Password: ${userPassword}`); // Displaying for admin visibility
 
   } else if (passwordInput === userPassword) {
     alert('User access granted. You can now place pixels!');
