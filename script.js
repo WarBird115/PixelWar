@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -171,18 +171,23 @@ function setWeeklyPassword() {
   weeklyPassword = passwords[weekNumber % passwords.length]; // Rotate through the list of passwords
 }
 
-// Update password at midnight every Sunday
-setInterval(() => {
+// Check if it's time to update the password (every Sunday at midnight)
+function checkPasswordChange() {
   const now = new Date();
   if (now.getDay() === 0 && now.getHours() === 0 && now.getMinutes() === 0) {
     setWeeklyPassword();
   }
-}, 60000); // Check every minute
+}
 
-setWeeklyPassword(); // Initialize the password on page load
+// Check for password change every minute
+setInterval(checkPasswordChange, 60000);
+
+// Initialize the password on page load
+setWeeklyPassword(); 
+
 loadCanvas(); // Load the canvas at the beginning
 
-// You can add event listener to a button for authentication
+// Add event listener to the button for authentication
 document.getElementById('authButton').addEventListener('click', () => {
   const passwordInput = document.getElementById('passwordInput').value;
   authenticateUser(passwordInput);
