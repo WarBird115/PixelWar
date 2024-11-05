@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -18,38 +18,11 @@ const database = getDatabase(app);
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
-const adminPassword = "The0verseer"; // Admin password (constant)
+const adminPassword = "The0verseer"; // Fixed admin password
 const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-let userPassword = ''; // Store the user password
-
-// Function to set weekly user password in Firebase
-async function setWeeklyUserPassword() {
-  const now = new Date();
-  const currentDate = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-  const storedDateRef = ref(database, 'storedData/storedDate');
-  const userPasswordRef = ref(database, 'storedData/userPassword');
-
-  // Get the stored date and user password from Firebase
-  const storedDateSnapshot = await get(storedDateRef);
-  const storedDate = storedDateSnapshot.val();
-  const userPasswordSnapshot = await get(userPasswordRef);
-  const encryptedPassword = userPasswordSnapshot.val();
-
-  // Check if the password needs to be changed (only on Sundays)
-  if (storedDate !== currentDate && now.getDay() === 0) { // Check if it's Sunday
-    const newPassword = generateRandomPassword();
-    await set(userPasswordRef, newPassword);
-    await set(storedDateRef, currentDate);
-    userPassword = newPassword; // Store the newly generated password for this week
-    console.log('New password generated and stored:', newPassword); // Debug log
-  } else if (encryptedPassword) {
-    userPassword = encryptedPassword; // Retrieve the existing password
-    console.log('Existing password retrieved:', userPassword); // Debug log
-  }
-}
 
 // Set canvas size
 const canvasWidth = 400;
@@ -126,7 +99,7 @@ canvas.addEventListener('click', (e) => {
 
 // Right-click to copy pixel color
 canvas.addEventListener('contextmenu', (e) => {
-  e.preventDefault(); // Prevent the context menu from appearing
+  e.preventDefault();
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((e.clientX - rect.left) / pixelSize);
   const y = Math.floor((e.clientY - rect.top) / pixelSize);
@@ -142,23 +115,14 @@ canvas.addEventListener('contextmenu', (e) => {
 });
 
 // Password submission
-document.getElementById('submitPassword').addEventListener('click', async () => {
+document.getElementById('submitPassword').addEventListener('click', () => {
   const passwordInput = document.getElementById('passwordInput').value;
-
-  await setWeeklyUserPassword(); // Ensure the user password is set before validating input
 
   console.log('Password input:', passwordInput); // Debug log
 
   if (passwordInput === adminPassword) {
     document.getElementById('clearCanvasButton').style.display = 'inline';
     alert('Admin access granted. You can now clear the canvas.');
-    isUserAuthenticated = true;
-
-    // Show the new weekly password for admin
-    alert(`Weekly User Password: ${userPassword}`); // Displaying for admin visibility
-
-  } else if (passwordInput === userPassword) {
-    alert('User access granted. You can now place pixels!');
     isUserAuthenticated = true;
   } else {
     alert('Incorrect password!');
