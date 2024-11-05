@@ -13,7 +13,7 @@
   <canvas id="canvas" width="400" height="400"></canvas>
 
   <input type="color" id="colorPicker" value="#000000">
-  <input type="password" id="passwordInput" placeholder="Enter password">
+  <input type="password" id="passwordInput" placeholder="Enter password" autofocus>
   <button id="submitPassword">Submit</button>
   <button id="clearCanvasButton" style="display: none;">Clear Canvas</button>
 
@@ -25,7 +25,7 @@
     Regular User Password: <span id="regularUserPasswordText"></span>
   </div>
 
-  <div id="cooldown-timer">You can place a pixel now!</div>
+  <div id="cooldown-timer" style="font-weight: bold;">You can place a pixel now!</div>
 
   <div id="welcomeText">
     <h2>Welcome to Pixel Wars!</h2>
@@ -142,7 +142,7 @@
   "I1jK2", "L3mN4", "O5pQ6", "R7sT8", "U9vW0",
   "X1yZ2", "A3bC4", "D5eF6", "G7hI8", "J9kL0",
   "M1nO2", "P3qR4", "S5tU6", "V7wX8", "Y9zA0",
-  "B1cD2", "E3fG4", "H5iJ6", "K7lM8", "N9oP0",
+  "B1cD2", "E3fG4", "H5iJ6", "K7mN8", "N9oP0",
   "Q1rS2", "T3uV4", "W5yZ6", "Z7aB8", "C9dE0",
   "F1gH2", "I3jK4", "L5mN6", "O7pQ8", "R9sT0",
   "U1vW2", "X3yZ4", "A5bC6", "D7eF8", "G9hI0",
@@ -153,63 +153,54 @@
   "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
   "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
   "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
-  "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0",
-  "Z1aB2", "C3dE4", "F5gH6", "I7jK8", "L9mN0",
-  "O1pQ2", "R3sT4", "U5vW6", "X7yZ8", "A9bC0",
-  "D1eF2", "G3hI4", "J5kL6", "M7nO8", "P9qR0"]; // Example password list
+  "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0"];
 
-    // Function to select a random password from the list
-    function getRandomPassword() {
-      const randomIndex = Math.floor(Math.random() * userPasswords.length);
-      return userPasswords[randomIndex];
-    }
+    const passwordInput = document.getElementById('passwordInput');
+    const submitPasswordButton = document.getElementById('submitPassword');
 
-    // Password submission for admin access
-    document.getElementById('submitPassword').addEventListener('click', async () => {
-      const passwordInput = document.getElementById('passwordInput').value;
+    // Handle password submission
+    submitPasswordButton.addEventListener('click', () => {
+      const password = passwordInput.value.trim();
 
-      if (passwordInput === adminPassword) {
-        document.getElementById('clearCanvasButton').style.display = 'inline';
-        alert('Admin access granted. You can now clear the canvas.');
-        isUserAuthenticated = true;
-
-        // Display the admin password
+      if (password === adminPassword) {
+        alert('Admin access granted! You can now clear the canvas.');
+        document.getElementById('clearCanvasButton').style.display = 'block';
         document.getElementById('adminPasswordDisplay').style.display = 'block';
         document.getElementById('adminPasswordText').textContent = adminPassword;
-
-        // Fetch a random password for regular users
-        const selectedPassword = getRandomPassword();
+        isUserAuthenticated = true; // Set to true for admin
+      } else if (userPasswords.includes(password)) {
+        alert('Access granted! You can now place a pixel.');
         document.getElementById('regularUserPasswordDisplay').style.display = 'block';
-        document.getElementById('regularUserPasswordText').textContent = selectedPassword;
-
+        document.getElementById('regularUserPasswordText').textContent = password;
+        isUserAuthenticated = true; // Set to true for regular users
       } else {
-        alert('Incorrect password. Please try again.');
-        document.getElementById('adminPasswordDisplay').style.display = 'none';
-        document.getElementById('regularUserPasswordDisplay').style.display = 'none';
+        alert('Incorrect password! Please try again.');
+        passwordInput.value = ''; // Clear the input
       }
     });
 
-    // Clear Canvas button functionality for admin
+    // Clear canvas function for admin
     document.getElementById('clearCanvasButton').addEventListener('click', () => {
-      const pixelsRef = ref(database, 'pixels');
-      remove(pixelsRef).then(() => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        alert('Canvas cleared!');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      remove(ref(database, 'pixels')).then(() => {
+        console.log('Canvas cleared in database');
       }).catch((error) => {
         console.error('Error clearing canvas:', error);
       });
     });
 
-    // Firebase data listener for pixels
+    // Load existing pixels from the database
     onValue(ref(database, 'pixels'), (snapshot) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
-      snapshot.forEach(childSnapshot => {
-        const pixelData = childSnapshot.val();
-        const [x, y] = childSnapshot.key.split(',').map(Number);
-        ctx.fillStyle = pixelData.color;
-        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-      });
+      const pixels = snapshot.val();
+      if (pixels) {
+        for (const [key, value] of Object.entries(pixels)) {
+          const [x, y] = key.split(',').map(Number);
+          ctx.fillStyle = value.color;
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        }
+      }
     });
+
   </script>
 </body>
 </html>
