@@ -18,11 +18,12 @@ const database = getDatabase(app);
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
-const pixelSize = 10; // Pixel size, adjustable
+const pixelSize = 10; // Pixel size
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-let weeklyPassword = ""; // Variable to store the weekly user password
+let weeklyPassword = ""; // Variable to store the user password
+let passwordChangeInterval = 604800000; // One week in milliseconds
 
 // List of 100 random passwords (5 characters, mixed case and numbers)
 const passwords = [
@@ -148,7 +149,7 @@ canvas.addEventListener('contextmenu', (e) => {
 });
 
 // Admin login
-const adminPassword = "The0verseer";
+const adminPassword = "Itsameamario1";
 const userPasswordField = document.getElementById('userPassword');
 const loginButton = document.getElementById('loginButton');
 const clearCanvasButton = document.getElementById('clearCanvasButton');
@@ -184,26 +185,15 @@ clearCanvasButton.addEventListener('click', () => {
     });
 });
 
-// Determine the current weekly password
-function determineWeeklyPassword() {
-  const currentDate = new Date();
-  const weekStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay());
-  const passwordIndex = Math.floor((weekStartDate.getTime() / 1000 / 60 / 60 / 24) % passwords.length);
-  weeklyPassword = passwords[passwordIndex];
+// Function to set a new password and reset the timer
+function setNewPassword() {
+  weeklyPassword = passwords[Math.floor(Math.random() * passwords.length)];
+  console.log(`New weekly password set: ${weeklyPassword}`);
+  // Reset the timer
+  setTimeout(setNewPassword, passwordChangeInterval);
 }
 
-// Check if today is Sunday and change the password
-function checkAndChangePassword() {
-  const now = new Date();
-  if (now.getDay() === 0 && now.getHours() === 0 && now.getMinutes() === 0) {
-    determineWeeklyPassword();
-    console.log(`Weekly password changed to: ${weeklyPassword}`);
-  }
-}
-
-// Initialize weekly password on page load
-determineWeeklyPassword();
+// Initialize the weekly password and start the timer
+setNewPassword();
 loadCanvas();
 updateCooldownTimer();
-setInterval(checkAndChangePassword, 60000); // Check every minute
-
