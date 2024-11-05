@@ -18,11 +18,11 @@ const database = getDatabase(app);
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const cooldownTimer = document.getElementById('cooldown-timer');
-const adminPassword = "The0verseer"; // Fixed admin password
 const pixelSize = 10; // Pixel size, adjustable
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
+let weeklyPassword = ""; // Variable to store the weekly password
 
 // Set canvas size
 const canvasWidth = 400;
@@ -114,15 +114,43 @@ canvas.addEventListener('contextmenu', (e) => {
   });
 });
 
+// Load passwords from GitHub
+const passwordFileURL = "https://github.com/WarBird115/PixelWar/blob/main/.github/workflows/update-password.yml"; // Update with your actual file URL
+
+// Function to fetch passwords from the GitHub file
+async function fetchPasswords() {
+    try {
+        const response = await fetch(passwordFileURL);
+        const data = await response.json();
+        return data.passwords || []; // Assuming your JSON has a "passwords" key
+    } catch (error) {
+        console.error("Error fetching passwords:", error);
+        return [];
+    }
+}
+
+// Function to set the weekly password
+async function setWeeklyPassword() {
+    const passwords = await fetchPasswords();
+    if (passwords.length > 0) {
+        const randomIndex = Math.floor(Math.random() * passwords.length);
+        weeklyPassword = passwords[randomIndex];
+        console.log("New Weekly Password:", weeklyPassword);
+    } else {
+        console.error("No passwords available to set.");
+    }
+}
+
 // Password submission
-document.getElementById('submitPassword').addEventListener('click', () => {
+document.getElementById('submitPassword').addEventListener('click', async () => {
   const passwordInput = document.getElementById('passwordInput').value;
 
   console.log('Password input:', passwordInput); // Debug log
 
-  if (passwordInput === adminPassword) {
+  if (passwordInput === "YourFixedAdminPasswordHere") { // Use your fixed admin password or set it as a variable
+    await setWeeklyPassword(); // Fetch and set the weekly password
     document.getElementById('clearCanvasButton').style.display = 'inline';
-    alert('Admin access granted. You can now clear the canvas.');
+    alert(`Admin access granted. You can now clear the canvas. Regular user password is: ${weeklyPassword}`);
     isUserAuthenticated = true;
   } else {
     alert('Incorrect password!');
@@ -154,3 +182,9 @@ onValue(ref(database, 'pixels/'), (snapshot) => {
     });
   }
 });
+
+// Check for week change and set password on page load
+window.onload = async () => {
+    await setWeeklyPassword(); // Ensure a password is set when the page loads
+    console.log("Current Weekly Password (for Admin):", weeklyPassword); // Optional: Log current password for admins
+};

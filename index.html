@@ -17,6 +17,14 @@
   <button id="submitPassword">Submit</button>
   <button id="clearCanvasButton" style="display: none;">Clear Canvas</button>
 
+  <div id="adminPasswordDisplay" style="display: none;">
+    Admin Password: <span id="adminPasswordText"></span>
+  </div>
+
+  <div id="regularUserPasswordDisplay" style="display: none;">
+    Regular User Password: <span id="regularUserPasswordText"></span>
+  </div>
+
   <div id="cooldown-timer">You can place a pixel now!</div>
 
   <div id="welcomeText">
@@ -126,16 +134,49 @@
       updateCooldownTimer();
     });
 
+    // Fetch predetermined passwords from GitHub
+    async function fetchPasswords() {
+      try {
+        const response = await fetch('https://github.com/WarBird115/PixelWar/blob/main/.github/workflows/update-password.yml');
+        const data = await response.json();
+        return data.passwords; // Assuming the JSON structure has a key "passwords" with an array of passwords
+      } catch (error) {
+        console.error('Error fetching passwords:', error);
+        return [];
+      }
+    }
+
     // Password submission for admin access
-    document.getElementById('submitPassword').addEventListener('click', () => {
+    document.getElementById('submitPassword').addEventListener('click', async () => {
       const passwordInput = document.getElementById('passwordInput').value;
 
       if (passwordInput === adminPassword) {
         document.getElementById('clearCanvasButton').style.display = 'inline';
         alert('Admin access granted. You can now clear the canvas.');
         isUserAuthenticated = true;
+
+        // Fetch and display the random password from GitHub
+        const passwords = await fetchPasswords();
+        if (passwords.length > 0) {
+          const randomIndex = Math.floor(Math.random() * passwords.length);
+          const selectedPassword = passwords[randomIndex];
+
+          // Display the selected password for admin
+          document.getElementById('adminPasswordDisplay').style.display = 'block';
+          document.getElementById('adminPasswordText').textContent = adminPassword;
+
+          // Display the regular user password
+          document.getElementById('regularUserPasswordDisplay').style.display = 'block';
+          document.getElementById('regularUserPasswordText').textContent = selectedPassword; // Set the selected password
+          console.log(`Regular User Password: ${selectedPassword}`); // Log it in the console
+        } else {
+          alert('No passwords available.');
+        }
       } else {
         alert('Incorrect password. Please try again.');
+        // Hide the password displays if incorrect password entered
+        document.getElementById('adminPasswordDisplay').style.display = 'none';
+        document.getElementById('regularUserPasswordDisplay').style.display = 'none';
       }
     });
 
@@ -155,12 +196,11 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
       snapshot.forEach(childSnapshot => {
         const pixelData = childSnapshot.val();
-        const coords = childSnapshot.key.split(',');
+        const [x, y] = childSnapshot.key.split(',').map(Number);
         ctx.fillStyle = pixelData.color;
-        ctx.fillRect(coords[0] * pixelSize, coords[1] * pixelSize, pixelSize, pixelSize);
+        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
       });
     });
-
   </script>
 </body>
 </html>
