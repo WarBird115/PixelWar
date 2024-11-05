@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
@@ -34,14 +34,7 @@ const passwords = [
   "X1yZ2", "A3bC4", "D5eF6", "G7hI8", "J9kL0",
   "M1nO2", "P3qR4", "S5tU6", "V7wX8", "Y9zA0",
   "B1cD2", "E3fG4", "H5iJ6", "K7lM8", "N9oP0",
-  "Q1rS2", "T3uV4", "W5yZ6", "Z7aB8", "C9dE0",
-  "F1gH2", "I3jK4", "L5mN6", "O7pQ8", "R9sT0",
-  "U1vW2", "X3yZ4", "A5bC6", "D7eF8", "G9hI0",
-  "J1kL2", "M3nO4", "P5qR6", "S7tU8", "V9wX0",
-  "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0",
-  "N1oP2", "Q3rS4", "T5uV6", "W7yZ8", "Z9aB0",
-  "C1dE2", "F3gH4", "I5jK6", "L7mN8", "O9pQ0",
-  "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
+  "Q1rS2", "T3uV4", "W5yZ6", "A7bC8", "D9eF0",
   "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
   "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
   "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0",
@@ -154,41 +147,63 @@ canvas.addEventListener('contextmenu', (e) => {
   });
 });
 
-// Authenticate user with password
-function authenticateUser(password) {
-  if (password === weeklyPassword) {
+// Admin login
+const adminPassword = "The0verseer";
+const userPasswordField = document.getElementById('userPassword');
+const loginButton = document.getElementById('loginButton');
+const clearCanvasButton = document.getElementById('clearCanvasButton');
+
+loginButton.addEventListener('click', () => {
+  const inputPassword = userPasswordField.value;
+  if (inputPassword === adminPassword) {
     isUserAuthenticated = true;
-    alert('Authenticated! You can now place pixels.');
+    alert('Admin access granted!');
+  } else if (inputPassword === weeklyPassword) {
+    isUserAuthenticated = true;
+    alert('Access granted! You can now place pixels.');
   } else {
-    alert('Incorrect password. Please try again.');
+    alert('Incorrect password! Try again.');
   }
+});
+
+// Clear canvas for admin
+clearCanvasButton.addEventListener('click', () => {
+  if (!isUserAuthenticated) {
+    alert('You must be an admin to clear the canvas!');
+    return;
+  }
+
+  const pixelsRef = ref(database, 'pixels/');
+  remove(pixelsRef)
+    .then(() => {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      console.log('Canvas cleared');
+    })
+    .catch((error) => {
+      console.error('Error clearing canvas:', error);
+    });
+});
+
+// Determine the current weekly password
+function determineWeeklyPassword() {
+  const currentDate = new Date();
+  const weekStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay());
+  const passwordIndex = Math.floor((weekStartDate.getTime() / 1000 / 60 / 60 / 24) % passwords.length);
+  weeklyPassword = passwords[passwordIndex];
 }
 
-// Set the weekly password based on the current date
-function setWeeklyPassword() {
-  const now = new Date();
-  const weekNumber = Math.floor(now.getTime() / (1000 * 60 * 60 * 24 * 7));
-  weeklyPassword = passwords[weekNumber % passwords.length]; // Rotate through the list of passwords
-}
-
-// Check if it's time to update the password (every Sunday at midnight)
-function checkPasswordChange() {
+// Check if today is Sunday and change the password
+function checkAndChangePassword() {
   const now = new Date();
   if (now.getDay() === 0 && now.getHours() === 0 && now.getMinutes() === 0) {
-    setWeeklyPassword();
+    determineWeeklyPassword();
+    console.log(`Weekly password changed to: ${weeklyPassword}`);
   }
 }
 
-// Check for password change every minute
-setInterval(checkPasswordChange, 60000);
+// Initialize weekly password on page load
+determineWeeklyPassword();
+loadCanvas();
+updateCooldownTimer();
+setInterval(checkAndChangePassword, 60000); // Check every minute
 
-// Initialize the password on page load
-setWeeklyPassword(); 
-
-loadCanvas(); // Load the canvas at the beginning
-
-// Add event listener to the button for authentication
-document.getElementById('authButton').addEventListener('click', () => {
-  const passwordInput = document.getElementById('passwordInput').value;
-  authenticateUser(passwordInput);
-});
