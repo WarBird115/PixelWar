@@ -163,21 +163,27 @@
       const password = passwordInput.value.trim();
 
       if (password === adminPassword) {
-        alert('Admin access granted! You can now clear the canvas.');
-        document.getElementById('clearCanvasButton').style.display = 'block';
-        document.getElementById('adminPasswordDisplay').style.display = 'block';
-        document.getElementById('adminPasswordText').textContent = adminPassword;
-        isUserAuthenticated = true; // Set to true for admin
-      } else if (userPasswords.includes(password)) {
-        alert('Access granted! You can now place a pixel.');
-        document.getElementById('regularUserPasswordDisplay').style.display = 'block';
-        document.getElementById('regularUserPasswordText').textContent = password;
-        isUserAuthenticated = true; // Set to true for regular users
-      } else {
-        alert('Incorrect password! Please try again.');
-        passwordInput.value = ''; // Clear the input
-      }
-    });
+    alert('Admin access granted! You can now clear the canvas.');
+    document.getElementById('clearCanvasButton').style.display = 'block';
+    document.getElementById('adminPasswordDisplay').style.display = 'block';
+    document.getElementById('adminPasswordText').textContent = adminPassword;
+
+    // Display all regular user passwords (for admin)
+    const allUserPasswords = userPasswords.join(', '); // Join the user passwords into a string
+    document.getElementById('regularUserPasswordDisplay').style.display = 'block';
+    document.getElementById('regularUserPasswordText').textContent = allUserPasswords;
+
+    isUserAuthenticated = true; // Set to true for admin
+  } else if (userPasswords.includes(password)) {
+    alert('Access granted! You can now place a pixel.');
+    document.getElementById('regularUserPasswordDisplay').style.display = 'block';
+    document.getElementById('regularUserPasswordText').textContent = password;
+    isUserAuthenticated = true; // Set to true for regular users
+  } else {
+    alert('Incorrect password! Please try again.');
+    passwordInput.value = ''; // Clear the input
+  }
+});
 
     // Clear canvas function for admin
     document.getElementById('clearCanvasButton').addEventListener('click', () => {
