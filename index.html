@@ -30,19 +30,11 @@
     <p>Game on and happy pixeling!</p>
   </div>
 
-  <div id="user-password" style="display: none; margin-top: 20px;">
-    User Password: <span id="display-password"></span>
-  </div>
-
-  <div id="firebase-version" style="margin-top: 20px;">
-    Firebase Version: <span id="firebase-version-text"></span>
-  </div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
     import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-    const CryptoJS = window.CryptoJS;
 
+    // Firebase configuration for real-time canvas syncing
     const firebaseConfig = {
       apiKey: "AIzaSyCjcSLUJsjQWmITFt3gQCul9BcNs1ABTpA",
       authDomain: "pixelwarnew.firebaseapp.com",
@@ -57,54 +49,14 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Display Firebase version
-    const firebaseVersion = "9.21.0"; // Change this to match your version
-    document.getElementById('firebase-version-text').textContent = firebaseVersion;
-
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const cooldownTimer = document.getElementById('cooldown-timer');
-    const adminPassword = "The0verseer"; // Admin password (constant)
+    const adminPassword = "The0verseer"; // Admin password
     const pixelSize = 10; // Pixel size, adjustable
     const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
     let cooldownEndTime = null;
     let isUserAuthenticated = false; // Track user authentication status
-
-    // Function to generate a random alphanumeric password
-    function generateRandomPassword() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let password = '';
-      for (let i = 0; i < 5; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return password;
-    }
-
-    // Encrypt password using AES
-    function encryptPassword(password) {
-      return CryptoJS.AES.encrypt(password, 'your-secret-key').toString();
-    }
-
-    // Decrypt password
-    function decryptPassword(encryptedPassword) {
-      const bytes = CryptoJS.AES.decrypt(encryptedPassword, 'your-secret-key');
-      return bytes.toString(CryptoJS.enc.Utf8);
-    }
-
-    // Function to set weekly user password
-    function setWeeklyUserPassword() {
-      const now = new Date();
-      const currentWeek = now.getFullYear() + "-W" + getWeekNumber(now);
-      const userPassword = generateRandomPassword(); // Generate a new password
-      return userPassword; // Return newly generated password for this week
-    }
-
-    // Get current week number
-    function getWeekNumber(date) {
-      const firstJan = new Date(date.getFullYear(), 0, 1);
-      const days = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
-      return Math.ceil((days + firstJan.getDay() + 1) / 7);
-    }
 
     // Set canvas size
     const canvasWidth = 400;
@@ -174,33 +126,20 @@
       updateCooldownTimer();
     });
 
-    // Password submission
+    // Password submission for admin access
     document.getElementById('submitPassword').addEventListener('click', () => {
       const passwordInput = document.getElementById('passwordInput').value;
-
-      console.log('Password Input:', passwordInput); // Log the entered password
 
       if (passwordInput === adminPassword) {
         document.getElementById('clearCanvasButton').style.display = 'inline';
         alert('Admin access granted. You can now clear the canvas.');
         isUserAuthenticated = true;
-
-        // Generate the weekly password for admin only
-        const userPassword = setWeeklyUserPassword(); // Generate the weekly password
-        console.log('Weekly User Password (for Admin):', userPassword); // Log the decrypted password
-        
-        // Display the user password on the webpage
-        document.getElementById('display-password').textContent = userPassword;
-        document.getElementById('user-password').style.display = 'block';
-      } else if (passwordInput === setWeeklyUserPassword()) {
-        isUserAuthenticated = true;
-        alert('You can now place a pixel!');
       } else {
         alert('Incorrect password. Please try again.');
       }
     });
 
-    // Clear Canvas button functionality
+    // Clear Canvas button functionality for admin
     document.getElementById('clearCanvasButton').addEventListener('click', () => {
       const pixelsRef = ref(database, 'pixels');
       remove(pixelsRef).then(() => {
