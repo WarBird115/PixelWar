@@ -154,57 +154,36 @@ canvas.addEventListener('contextmenu', (e) => {
   });
 });
 
-// Admin login
-const adminPassword = "The0verseer";
-const userPasswordField = document.getElementById('userPassword');
-const loginButton = document.getElementById('loginButton');
-const clearCanvasButton = document.getElementById('clearCanvasButton');
-
-loginButton.addEventListener('click', () => {
-  const inputPassword = userPasswordField.value;
-  if (inputPassword === adminPassword) {
+// Authenticate user with password
+function authenticateUser(password) {
+  if (password === weeklyPassword) {
     isUserAuthenticated = true;
-    alert('Admin access granted!');
-  } else if (inputPassword === weeklyPassword) {
-    isUserAuthenticated = true;
-    alert('Access granted! You can now place pixels.');
+    alert('Authenticated! You can now place pixels.');
   } else {
-    alert('Incorrect password! Try again.');
-  }
-});
-
-// Clear canvas for admin
-clearCanvasButton.addEventListener('click', () => {
-  if (!isUserAuthenticated) {
-    alert('You must be an admin to clear the canvas!');
-    return;
-  }
-
-  const pixelsRef = ref(database, 'pixels/');
-  remove(pixelsRef)
-    .then(() => {
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas visually
-      console.log('Canvas cleared');
-    })
-    .catch((error) => {
-      console.error('Error clearing canvas:', error);
-    });
-});
-
-// Update the password every week on Sundays at midnight
-function updateWeeklyPassword() {
-  const today = new Date();
-  const weekDay = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-
-  // Check if today is Sunday and the time is midnight
-  if (weekDay === 0 && today.getHours() === 0 && today.getMinutes() === 0) {
-    // Select a random password from the list
-    const randomIndex = Math.floor(Math.random() * passwords.length);
-    weeklyPassword = passwords[randomIndex];
-    console.log(`Weekly password updated to: ${weeklyPassword}`);
+    alert('Incorrect password. Please try again.');
   }
 }
 
-// Call this function on page load to initialize the password
-updateWeeklyPassword();
-loadCanvas();
+// Set the weekly password based on the current date
+function setWeeklyPassword() {
+  const now = new Date();
+  const weekNumber = Math.floor(now.getTime() / (1000 * 60 * 60 * 24 * 7));
+  weeklyPassword = passwords[weekNumber % passwords.length]; // Rotate through the list of passwords
+}
+
+// Update password at midnight every Sunday
+setInterval(() => {
+  const now = new Date();
+  if (now.getDay() === 0 && now.getHours() === 0 && now.getMinutes() === 0) {
+    setWeeklyPassword();
+  }
+}, 60000); // Check every minute
+
+setWeeklyPassword(); // Initialize the password on page load
+loadCanvas(); // Load the canvas at the beginning
+
+// You can add event listener to a button for authentication
+document.getElementById('authButton').addEventListener('click', () => {
+  const passwordInput = document.getElementById('passwordInput').value;
+  authenticateUser(passwordInput);
+});
