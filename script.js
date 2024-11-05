@@ -24,11 +24,32 @@ let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
 let weeklyPassword = ""; // Variable to store the weekly password
 
+// List of 100 random passwords (5 characters, mixed case and numbers)
+const passwords = [
+  "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
+  "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
+  // ... (full list continues)
+];
+
 // Set canvas size
 const canvasWidth = 400;
 const canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
+
+// Initialize the canvas from Firebase
+function loadCanvas() {
+  const pixelsRef = ref(database, 'pixels/');
+  onValue(pixelsRef, (snapshot) => {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear existing canvas
+    snapshot.forEach((childSnapshot) => {
+      const pixelData = childSnapshot.val();
+      const [x, y] = childSnapshot.key.split(',').map(Number);
+      ctx.fillStyle = pixelData.color;
+      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    });
+  });
+}
 
 // Check for cooldown
 if (localStorage.getItem('cooldownEndTime')) {
@@ -114,77 +135,56 @@ canvas.addEventListener('contextmenu', (e) => {
   });
 });
 
-// Load passwords from GitHub
-const passwordFileURL = "https://github.com/WarBird115/PixelWar/blob/main/.github/workflows/update-password.yml"; // Update with your actual file URL
-
-// Function to fetch passwords from the GitHub file
-async function fetchPasswords() {
-    try {
-        const response = await fetch(passwordFileURL);
-        const data = await response.json();
-        return data.passwords || []; // Assuming your JSON has a "passwords" key
-    } catch (error) {
-        console.error("Error fetching passwords:", error);
-        return [];
-    }
-}
-
 // Function to set the weekly password
-async function setWeeklyPassword() {
-    const passwords = await fetchPasswords();
-    if (passwords.length > 0) {
-        const randomIndex = Math.floor(Math.random() * passwords.length);
-        weeklyPassword = passwords[randomIndex];
-        console.log("New Weekly Password:", weeklyPassword);
-    } else {
-        console.error("No passwords available to set.");
-    }
+function setWeeklyPassword() {
+  const weekNumber = getWeekNumber(new Date());
+  const passwordIndex = weekNumber % passwords.length; // Ensure the index is within bounds
+  weeklyPassword = passwords[passwordIndex];
+  localStorage.setItem('weeklyPassword', weeklyPassword); // Store in local storage
+  console.log("New Weekly Password (for Admin):", weeklyPassword);
 }
 
-// Password submission
-document.getElementById('submitPassword').addEventListener('click', async () => {
-  const passwordInput = document.getElementById('passwordInput').value;
+// Get current week number
+function getWeekNumber(date) {
+  const firstJan = new Date(date.getFullYear(), 0, 1);
+  const daysInYear = Math.floor((date - firstJan) / (24 * 60 * 60 * 1000));
+  return Math.ceil((daysInYear + firstJan.getDay() + 1) / 7);
+}
 
-  console.log('Password input:', passwordInput); // Debug log
-
-  if (passwordInput === "YourFixedAdminPasswordHere") { // Use your fixed admin password or set it as a variable
-    await setWeeklyPassword(); // Fetch and set the weekly password
-    document.getElementById('clearCanvasButton').style.display = 'inline';
-    alert(`Admin access granted. You can now clear the canvas. Regular user password is: ${weeklyPassword}`);
+// Check user password
+const passwordInput = document.getElementById('passwordInput');
+const passwordButton = document.getElementById('passwordButton');
+passwordButton.addEventListener('click', () => {
+  const enteredPassword = passwordInput.value;
+  if (enteredPassword === "The0verseer") { // Admin password
     isUserAuthenticated = true;
+    alert('Admin access granted!');
+  } else if (enteredPassword === weeklyPassword) { // Weekly password
+    isUserAuthenticated = true;
+    alert('Access granted!');
   } else {
     alert('Incorrect password!');
   }
 });
 
-// Clear canvas button
-document.getElementById('clearCanvasButton').addEventListener('click', () => {
-  const confirmed = confirm('Are you sure you want to clear the canvas?');
-  if (confirmed) {
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+// Clear canvas function for admin
+const clearCanvasButton = document.getElementById('clearCanvasButton');
+clearCanvasButton.addEventListener('click', () => {
+  if (isUserAuthenticated && passwordInput.value === "The0verseer") { // Check if admin
     const pixelsRef = ref(database, 'pixels/');
     remove(pixelsRef).then(() => {
-      console.log('Canvas cleared in database');
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear canvas
+      alert('Canvas cleared successfully!');
     }).catch((error) => {
       console.error('Error clearing canvas:', error);
     });
+  } else {
+    alert('You must be an admin to clear the canvas!');
   }
 });
 
-// Load pixels from Firebase on startup
-onValue(ref(database, 'pixels/'), (snapshot) => {
-  const pixels = snapshot.val();
-  if (pixels) {
-    Object.keys(pixels).forEach((key) => {
-      const [x, y] = key.split(',').map(Number);
-      ctx.fillStyle = pixels[key].color;
-      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-    });
-  }
-});
+// Initialize canvas
+loadCanvas();
 
-// Check for week change and set password on page load
-window.onload = async () => {
-    await setWeeklyPassword(); // Ensure a password is set when the page loads
-    console.log("Current Weekly Password (for Admin):", weeklyPassword); // Optional: Log current password for admins
-};
+// Initialize weekly password at the start
+setWeeklyPassword();
