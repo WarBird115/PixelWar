@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -56,6 +56,36 @@ const canvasWidth = 400;
 const canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
+
+// Function to load the weekly password from the "passwords" node in Firebase
+function loadWeeklyPassword() {
+  const passwordRef = ref(database, 'passwords/weeklyPassword');
+  get(passwordRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      weeklyPassword = snapshot.val(); // Use the stored password from Firebase
+    } else {
+      setNewPassword(); // Set a new password if it doesn't exist in Firebase
+    }
+  }).catch((error) => {
+    console.error('Error retrieving password:', error);
+  });
+}
+
+// Function to set a new weekly password and store it in Firebase under "passwords"
+function setNewPassword() {
+  weeklyPassword = passwords[Math.floor(Math.random() * passwords.length)];
+  const passwordRef = ref(database, 'passwords/weeklyPassword');
+  set(passwordRef, weeklyPassword)
+    .then(() => {
+      console.log('New weekly password set:', weeklyPassword);
+    })
+    .catch((error) => {
+      console.error('Error setting new password:', error);
+    });
+}
+
+// Load the weekly password when the page loads
+loadWeeklyPassword();
 
 // Initialize the canvas from Firebase
 function loadCanvas() {
@@ -138,39 +168,19 @@ canvas.addEventListener('click', (e) => {
   updateCooldownTimer();
 });
 
-// Right-click to copy pixel color
-canvas.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) / pixelSize);
-  const y = Math.floor((e.clientY - rect.top) / pixelSize);
-
-  const imageData = ctx.getImageData(x * pixelSize, y * pixelSize, pixelSize, pixelSize).data;
-  const color = `rgba(${imageData[0]}, ${imageData[1]}, ${imageData[2]}, ${imageData[3] / 255})`;
-
-  navigator.clipboard.writeText(color).then(() => {
-    alert(`Color ${color} copied to clipboard!`);
-  }).catch((error) => {
-    console.error('Error copying color:', error);
-  });
-});
-
-// Admin login and user password logic
+// Admin password logic
 const adminPassword = "The0verseer";
 const userPasswordField = document.getElementById('userPassword');
 const loginButton = document.getElementById('loginButton');
 const clearCanvasButton = document.getElementById('clearCanvasButton');
 const adminPasswordDisplay = document.getElementById('adminPasswordText'); // Admin password display
 
-// Set the weekly password for regular users
-const userPassword = passwords[Math.floor(Math.random() * passwords.length)];
-
 loginButton.addEventListener('click', () => {
   const inputPassword = userPasswordField.value;
   if (inputPassword === adminPassword) {
     isUserAuthenticated = true;
     alert('Admin access granted!');
-  } else if (inputPassword === userPassword) {
+  } else if (inputPassword === weeklyPassword) {
     isUserAuthenticated = true;
     alert('Access granted! You can now place pixels.');
   } else {
@@ -196,18 +206,8 @@ clearCanvasButton.addEventListener('click', () => {
     });
 });
 
-// Function to set a new password and reset the timer
-function setNewPassword() {
-  weeklyPassword = passwords[Math.floor(Math.random() * passwords.length)];
-  console.log(`New weekly password set: ${weeklyPassword}`);
-  // Reset the timer
-  setTimeout(setNewPassword, passwordChangeInterval);
-}
-
 // Display the current weekly password for the admin
-adminPasswordDisplay.textContent = `Current weekly password: ${userPassword}`;
+adminPasswordDisplay.textContent = `Current weekly password: ${weeklyPassword}`;
 
-// Initialize the weekly password and start the timer
-setNewPassword();
 loadCanvas();
 updateCooldownTimer();
