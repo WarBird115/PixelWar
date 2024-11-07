@@ -21,10 +21,6 @@
     Admin Password: <span id="adminPasswordText"></span>
   </div>
 
-  <div id="regularUserPasswordDisplay" style="display: none;">
-    Regular User Password: <span id="regularUserPasswordText"></span>
-  </div>
-
   <div id="cooldown-timer" style="font-weight: bold;">You can place a pixel now!</div>
 
   <div id="welcomeText">
@@ -158,6 +154,9 @@
     const passwordInput = document.getElementById('passwordInput');
     const submitPasswordButton = document.getElementById('submitPassword');
 
+    // Randomly select a user password for the week
+    const currentUserPassword = userPasswords[Math.floor(Math.random() * userPasswords.length)];
+
     // Handle password submission
     submitPasswordButton.addEventListener('click', () => {
       const password = passwordInput.value.trim();
@@ -166,16 +165,10 @@
         alert('Admin access granted! You can now clear the canvas.');
         document.getElementById('clearCanvasButton').style.display = 'block';
         document.getElementById('adminPasswordDisplay').style.display = 'block';
-        document.getElementById('adminPasswordText').textContent = adminPassword;
-
-        // Hide regular user passwords from the admin
-        document.getElementById('regularUserPasswordDisplay').style.display = 'none';
-
+        document.getElementById('adminPasswordText').textContent = currentUserPassword; // Display user password only for admin
         isUserAuthenticated = true; // Set to true for admin
-      } else if (userPasswords.includes(password)) {
+      } else if (password === currentUserPassword) {
         alert('Access granted! You can now place a pixel.');
-        document.getElementById('regularUserPasswordDisplay').style.display = 'block';
-        document.getElementById('regularUserPasswordText').textContent = password;
         isUserAuthenticated = true; // Set to true for regular users
       } else {
         alert('Incorrect password! Please try again.');

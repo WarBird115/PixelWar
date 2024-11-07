@@ -155,18 +155,22 @@ canvas.addEventListener('contextmenu', (e) => {
   });
 });
 
-// Admin login
+// Admin login and user password logic
 const adminPassword = "The0verseer";
 const userPasswordField = document.getElementById('userPassword');
 const loginButton = document.getElementById('loginButton');
 const clearCanvasButton = document.getElementById('clearCanvasButton');
+const adminPasswordDisplay = document.getElementById('adminPasswordText'); // Admin password display
+
+// Set the weekly password for regular users
+const userPassword = passwords[Math.floor(Math.random() * passwords.length)];
 
 loginButton.addEventListener('click', () => {
   const inputPassword = userPasswordField.value;
   if (inputPassword === adminPassword) {
     isUserAuthenticated = true;
     alert('Admin access granted!');
-  } else if (inputPassword === weeklyPassword) {
+  } else if (inputPassword === userPassword) {
     isUserAuthenticated = true;
     alert('Access granted! You can now place pixels.');
   } else {
@@ -199,6 +203,9 @@ function setNewPassword() {
   // Reset the timer
   setTimeout(setNewPassword, passwordChangeInterval);
 }
+
+// Display the current weekly password for the admin
+adminPasswordDisplay.textContent = `Current weekly password: ${userPassword}`;
 
 // Initialize the weekly password and start the timer
 setNewPassword();
