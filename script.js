@@ -28,9 +28,30 @@ let isUserAuthenticated = false; // Track user authentication status
 let weeklyPassword = ""; // Variable to store the user password
 let passwordChangeInterval = 604800000; // One week in milliseconds
 
-// List of 100 random passwords (5 characters, mixed case and numbers)
-const passwords = [
-  "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
+// Set canvas size
+const canvasWidth = 400;
+const canvasHeight = 400;
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
+
+// Function to load the weekly password from Firebase
+function loadWeeklyPassword() {
+  get(passwordRef).then((snapshot) => {
+    if (snapshot.exists()) {
+      weeklyPassword = snapshot.val(); // Use the stored password from Firebase
+      console.log("Loaded weekly password:", weeklyPassword);
+    } else {
+      setNewPassword(); // Set a new password if it doesn't exist
+    }
+  }).catch((error) => {
+    console.error('Error retrieving password:', error);
+  });
+}
+
+// Function to set a new weekly password and store it in Firebase under 'passwords'
+function setNewPassword() {
+  const passwords = [
+    "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
   "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
   "E1fG2", "H3iJ4", "K5lM6", "N7oP8", "Q9rS0",
   "T1uV2", "W3xY4", "Z5aB6", "C7dE8", "F9gH0",
@@ -49,32 +70,8 @@ const passwords = [
   "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
   "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
   "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0"
-];
-
-// Set canvas size
-const canvasWidth = 400;
-const canvasHeight = 400;
-canvas.width = canvasWidth;
-canvas.height = canvasHeight;
-
-// Function to load the weekly password from the "passwords" node in Firebase
-function loadWeeklyPassword() {
-  const passwordRef = ref(database, 'passwords/weeklyPassword');
-  get(passwordRef).then((snapshot) => {
-    if (snapshot.exists()) {
-      weeklyPassword = snapshot.val(); // Use the stored password from Firebase
-    } else {
-      setNewPassword(); // Set a new password if it doesn't exist in Firebase
-    }
-  }).catch((error) => {
-    console.error('Error retrieving password:', error);
-  });
-}
-
-// Function to set a new weekly password and store it in Firebase under "passwords"
-function setNewPassword() {
+  ];
   weeklyPassword = passwords[Math.floor(Math.random() * passwords.length)];
-  const passwordRef = ref(database, 'passwords/weeklyPassword');
   set(passwordRef, weeklyPassword)
     .then(() => {
       console.log('New weekly password set:', weeklyPassword);
