@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -16,6 +16,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+
+// Firebase reference for the password node - verify the exact path in Firebase
+const passwordRef = ref(database, 'passwords/currentWeekPassword');  // Correct path
+
+// Weekly password display element
+const adminPasswordText = document.getElementById('adminPasswordText');
 
 // Canvas setup
 const canvas = document.getElementById('canvas');
@@ -34,21 +40,20 @@ const canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
-// Firebase references
-const passwordRef = ref(database, 'passwords/currentWeekPassword');
-
 // Function to load the weekly password from Firebase
 function loadWeeklyPassword() {
+  console.log("Attempting to load weekly password..."); // Debugging log
   get(passwordRef).then((snapshot) => {
     if (snapshot.exists()) {
-      weeklyPassword = snapshot.val(); // Use the stored password from Firebase
-      console.log("Loaded weekly password:", weeklyPassword);
-      document.getElementById('adminPasswordText').textContent = `Current weekly password: ${weeklyPassword}`; // Update display
+      weeklyPassword = snapshot.val();
+      console.log("Loaded weekly password:", weeklyPassword); // Log password for verification
+      adminPasswordText.textContent = `Current weekly password: ${weeklyPassword}`;
     } else {
-      setNewPassword(); // Set a new password if it doesn't exist
+      console.warn("Password does not exist; setting a new one.");
+      setNewPassword(); // Set a new password if none exists
     }
   }).catch((error) => {
-    console.error('Error retrieving password:', error);
+    console.error("Error retrieving password:", error);
   });
 }
 
@@ -79,7 +84,7 @@ function setNewPassword() {
   set(passwordRef, weeklyPassword)
     .then(() => {
       console.log('New weekly password set:', weeklyPassword);
-      document.getElementById('adminPasswordText').textContent = `Current weekly password: ${weeklyPassword}`; // Update display
+      adminPasswordText.textContent = `Current weekly password: ${weeklyPassword}`; // Update display
     })
     .catch((error) => {
       console.error('Error setting new password:', error);
@@ -173,7 +178,6 @@ canvas.addEventListener('click', (e) => {
 // Admin password logic
 const adminPassword = "The0verseer";
 const userPasswordField = document.getElementById('userPassword');
-const adminPasswordText = document.getElementById('adminPasswordText');
 
 document.getElementById('loginButton').addEventListener('click', () => {
   const userPassword = userPasswordField.value;
