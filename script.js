@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
 import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { writeFileSync } from 'fs';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -75,6 +76,12 @@ function loadWeeklyPassword() {
       currentPassword = snapshot.val();
       console.log("Loaded weekly password:", currentPassword); // Log password for verification
       adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
+
+      // Write password to file for backup (optional)
+      if (currentPassword) {
+        writeFileSync('selected_password.txt', currentPassword, 'utf8');
+        console.log("Password written to file.");
+      }
     } else {
       console.warn("Password does not exist; setting a new one.");
       setWeeklyPassword(); // Set the weekly password
@@ -91,6 +98,10 @@ function setWeeklyPassword() {
     .then(() => {
       console.log('Weekly password set:', currentPassword);
       adminPasswordText.textContent = `Current weekly password: ${currentPassword}`; // Update display
+
+      // Write password to file for backup (optional)
+      writeFileSync('selected_password.txt', currentPassword, 'utf8');
+      console.log("Password written to file.");
     })
     .catch((error) => {
       console.error('Error setting weekly password:', error);
