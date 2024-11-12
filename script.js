@@ -17,8 +17,37 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Firebase reference for the password node - verify the exact path in Firebase
-const passwordRef = ref(database, 'Data/password');  // Correct path
+// Firebase reference for the password node
+const passwordRef = ref(database, 'Data/password');
+
+// Predetermined password list
+const passwords = [
+  "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
+  "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
+  "E1fG2", "H3iJ4", "K5lM6", "N7oP8", "Q9rS0",
+  "T1uV2", "W3xY4", "Z5aB6", "C7dE8", "F9gH0",
+  "I1jK2", "L3mN4", "O5pQ6", "R7sT8", "U9vW0",
+  "X1yZ2", "A3bC4", "D5eF6", "G7hI8", "J9kL0",
+  "M1nO2", "P3qR4", "S5tU6", "V7wX8", "Y9zA0",
+  "B1cD2", "E3fG4", "H5iJ6", "K7mN8", "N9oP0",
+  "Q1rS2", "T3uV4", "W5yZ6", "Z7aB8", "C9dE0",
+  "F1gH2", "I3jK4", "L5mN6", "O7pQ8", "R9sT0",
+  "U1vW2", "X3yZ4", "A5bC6", "D7eF8", "G9hI0",
+  "J1kL2", "M3nO4", "P5qR6", "S7tU8", "V9wX0",
+  "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0",
+  "N1oP2", "Q3rS4", "T5uV6", "W7yZ8", "Z9aB0",
+  "C1dE2", "F3gH4", "I5jK6", "L7mN8", "O9pQ0",
+  "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
+  "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
+  "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
+  "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0",
+  "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0"
+];
+
+// Password rotation logic
+const passwordChangeInterval = 604800000; // One week in milliseconds
+let currentPasswordIndex = Math.floor(Date.now() / passwordChangeInterval) % passwords.length;
+let currentPassword = passwords[currentPasswordIndex];
 
 // Weekly password display element
 const adminPasswordText = document.getElementById('adminPasswordText');
@@ -31,8 +60,6 @@ const pixelSize = 10; // Pixel size
 const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
 let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-let weeklyPassword = ""; // Variable to store the user password
-let passwordChangeInterval = 604800000; // One week in milliseconds
 
 // Set canvas size
 const canvasWidth = 400;
@@ -45,49 +72,28 @@ function loadWeeklyPassword() {
   console.log("Attempting to load weekly password..."); // Debugging log
   get(passwordRef).then((snapshot) => {
     if (snapshot.exists()) {
-      weeklyPassword = snapshot.val();
-      console.log("Loaded weekly password:", weeklyPassword); // Log password for verification
-      adminPasswordText.textContent = `Current weekly password: ${weeklyPassword}`;
+      currentPassword = snapshot.val();
+      console.log("Loaded weekly password:", currentPassword); // Log password for verification
+      adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
     } else {
       console.warn("Password does not exist; setting a new one.");
-      setNewPassword(); // Set a new password if none exists
+      setWeeklyPassword(); // Set the weekly password
     }
   }).catch((error) => {
     console.error("Error retrieving password:", error);
   });
 }
 
-// Function to set a new weekly password and store it in Firebase under 'passwords'
-function setNewPassword() {
-  const passwords = [
-    "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
-    "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
-    "E1fG2", "H3iJ4", "K5lM6", "N7oP8", "Q9rS0",
-    "T1uV2", "W3xY4", "Z5aB6", "C7dE8", "F9gH0",
-    "I1jK2", "L3mN4", "O5pQ6", "R7sT8", "U9vW0",
-    "X1yZ2", "A3bC4", "D5eF6", "G7hI8", "J9kL0",
-    "M1nO2", "P3qR4", "S5tU6", "V7wX8", "Y9zA0",
-    "B1cD2", "E3fG4", "H5iJ6", "K7mN8", "N9oP0",
-    "Q1rS2", "T3uV4", "W5yZ6", "Z7aB8", "C9dE0",
-    "F1gH2", "I3jK4", "L5mN6", "O7pQ8", "R9sT0",
-    "U1vW2", "X3yZ4", "A5bC6", "D7eF8", "G9hI0",
-    "J1kL2", "M3nO4", "P5qR6", "S7tU8", "V9wX0",
-    "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0",
-    "N1oP2", "Q3rS4", "T5uV6", "W7yZ8", "Z9aB0",
-    "C1dE2", "F3gH4", "I5jK6", "L7mN8", "O9pQ0",
-    "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
-    "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
-    "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
-    "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0"
-  ];
-  weeklyPassword = passwords[Math.floor(Math.random() * passwords.length)];
-  set(passwordRef, weeklyPassword)
+// Function to set the weekly password in Firebase
+function setWeeklyPassword() {
+  currentPassword = passwords[currentPasswordIndex];
+  set(passwordRef, currentPassword)
     .then(() => {
-      console.log('New weekly password set:', weeklyPassword);
-      adminPasswordText.textContent = `Current weekly password: ${weeklyPassword}`; // Update display
+      console.log('Weekly password set:', currentPassword);
+      adminPasswordText.textContent = `Current weekly password: ${currentPassword}`; // Update display
     })
     .catch((error) => {
-      console.error('Error setting new password:', error);
+      console.error('Error setting weekly password:', error);
     });
 }
 
@@ -158,30 +164,26 @@ canvas.addEventListener('click', (e) => {
   const x = Math.floor((e.clientX - rect.left) / pixelSize);
   const y = Math.floor((e.clientY - rect.top) / pixelSize);
 
-  ctx.fillStyle = currentColor;
-  ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-
-  const pixelRef = ref(database, `pixels/${x},${y}`);
-  set(pixelRef, { color: currentColor })
+  set(ref(database, `pixels/${x},${y}`), { color: currentColor })
     .then(() => {
-      console.log('Pixel saved');
+      // Set cooldown
+      cooldownEndTime = Date.now() + cooldownDuration;
+      localStorage.setItem('cooldownEndTime', cooldownEndTime.toString());
+      updateCooldownTimer();
+      loadCanvas(); // Reload canvas to show the placed pixel
     })
     .catch((error) => {
-      console.error('Error saving pixel:', error);
+      console.error('Error placing pixel:', error);
     });
-
-  cooldownEndTime = Date.now() + cooldownDuration;
-  localStorage.setItem('cooldownEndTime', cooldownEndTime);
-  updateCooldownTimer();
 });
 
-// Admin password logic
-const adminPassword = "The0verseer";
-const userPasswordField = document.getElementById('userPassword');
+// Admin login for placing pixels
+const adminPasswordField = document.getElementById('adminPassword');
+const loginButton = document.getElementById('loginButton');
 
-document.getElementById('loginButton').addEventListener('click', () => {
-  const userPassword = userPasswordField.value;
-  if (userPassword === adminPassword) {
+loginButton.addEventListener('click', () => {
+  const enteredPassword = adminPasswordField.value;
+  if (enteredPassword === currentPassword) {
     isUserAuthenticated = true;
     alert('Authentication successful!');
   } else {
@@ -189,5 +191,5 @@ document.getElementById('loginButton').addEventListener('click', () => {
   }
 });
 
-// Load initial canvas state
+// Initialize the canvas
 loadCanvas();
