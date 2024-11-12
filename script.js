@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // Firebase reference for the password node - verify the exact path in Firebase
-const passwordRef = ref(database, 'passwords/currentWeekPassword');  // Correct path
+const passwordRef = ref(database, 'Data/password');  // Correct path
 
 // Weekly password display element
 const adminPasswordText = document.getElementById('adminPasswordText');
