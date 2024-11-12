@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -34,12 +34,16 @@ const canvasHeight = 400;
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
+// Firebase references
+const passwordRef = ref(database, 'passwords/currentWeekPassword');
+
 // Function to load the weekly password from Firebase
 function loadWeeklyPassword() {
   get(passwordRef).then((snapshot) => {
     if (snapshot.exists()) {
       weeklyPassword = snapshot.val(); // Use the stored password from Firebase
       console.log("Loaded weekly password:", weeklyPassword);
+      document.getElementById('adminPasswordText').textContent = `Current weekly password: ${weeklyPassword}`; // Update display
     } else {
       setNewPassword(); // Set a new password if it doesn't exist
     }
@@ -52,29 +56,30 @@ function loadWeeklyPassword() {
 function setNewPassword() {
   const passwords = [
     "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
-  "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
-  "E1fG2", "H3iJ4", "K5lM6", "N7oP8", "Q9rS0",
-  "T1uV2", "W3xY4", "Z5aB6", "C7dE8", "F9gH0",
-  "I1jK2", "L3mN4", "O5pQ6", "R7sT8", "U9vW0",
-  "X1yZ2", "A3bC4", "D5eF6", "G7hI8", "J9kL0",
-  "M1nO2", "P3qR4", "S5tU6", "V7wX8", "Y9zA0",
-  "B1cD2", "E3fG4", "H5iJ6", "K7mN8", "N9oP0",
-  "Q1rS2", "T3uV4", "W5yZ6", "Z7aB8", "C9dE0",
-  "F1gH2", "I3jK4", "L5mN6", "O7pQ8", "R9sT0",
-  "U1vW2", "X3yZ4", "A5bC6", "D7eF8", "G9hI0",
-  "J1kL2", "M3nO4", "P5qR6", "S7tU8", "V9wX0",
-  "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0",
-  "N1oP2", "Q3rS4", "T5uV6", "W7yZ8", "Z9aB0",
-  "C1dE2", "F3gH4", "I5jK6", "L7mN8", "O9pQ0",
-  "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
-  "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
-  "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
-  "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0"
+    "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
+    "E1fG2", "H3iJ4", "K5lM6", "N7oP8", "Q9rS0",
+    "T1uV2", "W3xY4", "Z5aB6", "C7dE8", "F9gH0",
+    "I1jK2", "L3mN4", "O5pQ6", "R7sT8", "U9vW0",
+    "X1yZ2", "A3bC4", "D5eF6", "G7hI8", "J9kL0",
+    "M1nO2", "P3qR4", "S5tU6", "V7wX8", "Y9zA0",
+    "B1cD2", "E3fG4", "H5iJ6", "K7mN8", "N9oP0",
+    "Q1rS2", "T3uV4", "W5yZ6", "Z7aB8", "C9dE0",
+    "F1gH2", "I3jK4", "L5mN6", "O7pQ8", "R9sT0",
+    "U1vW2", "X3yZ4", "A5bC6", "D7eF8", "G9hI0",
+    "J1kL2", "M3nO4", "P5qR6", "S7tU8", "V9wX0",
+    "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0",
+    "N1oP2", "Q3rS4", "T5uV6", "W7yZ8", "Z9aB0",
+    "C1dE2", "F3gH4", "I5jK6", "L7mN8", "O9pQ0",
+    "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
+    "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
+    "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
+    "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0"
   ];
   weeklyPassword = passwords[Math.floor(Math.random() * passwords.length)];
   set(passwordRef, weeklyPassword)
     .then(() => {
       console.log('New weekly password set:', weeklyPassword);
+      document.getElementById('adminPasswordText').textContent = `Current weekly password: ${weeklyPassword}`; // Update display
     })
     .catch((error) => {
       console.error('Error setting new password:', error);
@@ -168,43 +173,17 @@ canvas.addEventListener('click', (e) => {
 // Admin password logic
 const adminPassword = "The0verseer";
 const userPasswordField = document.getElementById('userPassword');
-const loginButton = document.getElementById('loginButton');
-const clearCanvasButton = document.getElementById('clearCanvasButton');
-const adminPasswordDisplay = document.getElementById('adminPasswordText'); // Admin password display
+const adminPasswordText = document.getElementById('adminPasswordText');
 
-loginButton.addEventListener('click', () => {
-  const inputPassword = userPasswordField.value;
-  if (inputPassword === adminPassword) {
+document.getElementById('loginButton').addEventListener('click', () => {
+  const userPassword = userPasswordField.value;
+  if (userPassword === adminPassword) {
     isUserAuthenticated = true;
-    alert('Admin access granted!');
-  } else if (inputPassword === weeklyPassword) {
-    isUserAuthenticated = true;
-    alert('Access granted! You can now place pixels.');
+    alert('Authentication successful!');
   } else {
-    alert('Incorrect password! Try again.');
+    alert('Incorrect password!');
   }
 });
 
-// Clear canvas for admin
-clearCanvasButton.addEventListener('click', () => {
-  if (!isUserAuthenticated) {
-    alert('You must be an admin to clear the canvas!');
-    return;
-  }
-
-  const pixelsRef = ref(database, 'pixels/');
-  remove(pixelsRef)
-    .then(() => {
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      console.log('Canvas cleared');
-    })
-    .catch((error) => {
-      console.error('Error clearing canvas:', error);
-    });
-});
-
-// Display the current weekly password for the admin
-adminPasswordDisplay.textContent = `Current weekly password: ${weeklyPassword}`;
-
+// Load initial canvas state
 loadCanvas();
-updateCooldownTimer();
