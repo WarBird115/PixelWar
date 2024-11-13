@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
 import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
-import { writeFileSync } from 'fs';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -17,11 +17,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const auth = getAuth();
 
 // Firebase reference for the password node
-const passwordRef = ref(database, 'Data/password');
+const passwordRef = ref(database, 'password/currentWeekPassword');
 
-// Predetermined password list
+// Predetermined password list for weekly rotation
 const passwords = [
   "A1bC2", "D3eF4", "G5hI6", "J7kL8", "M9nO0",
   "P1qR2", "S3tU4", "V5wX6", "Y7zA8", "B9cD0",
@@ -41,8 +42,7 @@ const passwords = [
   "R1sT2", "U3vW4", "X5yZ6", "A7bC8", "D9eF0",
   "G1hI2", "J3kL4", "M5nO6", "P7qR8", "S9tU0",
   "V1wX2", "Y3zA4", "B5cD6", "E7fG8", "H9iJ0",
-  "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0",
-  "Y1zA2", "B3cD4", "E5fG6", "H7iJ8", "K9lM0"
+  "K1lM2", "N3oP4", "Q5rS6", "T7uV8", "W9yZ0", // Add more as needed
 ];
 
 // Password rotation logic
@@ -52,56 +52,30 @@ let currentPassword = passwords[currentPasswordIndex];
 
 // Weekly password display element
 const adminPasswordText = document.getElementById('adminPasswordText');
-
-// Canvas setup
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const cooldownTimer = document.getElementById('cooldown-timer');
-const pixelSize = 10; // Pixel size
-const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
-let cooldownEndTime = null;
 let isUserAuthenticated = false; // Track user authentication status
-
-// Set canvas size
-const canvasWidth = 400;
-const canvasHeight = 400;
-canvas.width = canvasWidth;
-canvas.height = canvasHeight;
 
 // Function to load the weekly password from Firebase
 function loadWeeklyPassword() {
-  console.log("Attempting to load weekly password..."); // Debugging log
   get(passwordRef).then((snapshot) => {
     if (snapshot.exists()) {
       currentPassword = snapshot.val();
-      console.log("Loaded weekly password:", currentPassword); // Log password for verification
       adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
-
-      // Write password to file for backup (optional)
-      if (currentPassword) {
-        writeFileSync('selected_password.txt', currentPassword, 'utf8');
-        console.log("Password written to file.");
-      }
     } else {
       console.warn("Password does not exist; setting a new one.");
-      setWeeklyPassword(); // Set the weekly password
+      setWeeklyPassword(); // Set the weekly password if not already set
     }
   }).catch((error) => {
     console.error("Error retrieving password:", error);
   });
 }
 
-// Function to set the weekly password in Firebase
+// Function to set the weekly password in Firebase (admin only)
 function setWeeklyPassword() {
   currentPassword = passwords[currentPasswordIndex];
   set(passwordRef, currentPassword)
     .then(() => {
       console.log('Weekly password set:', currentPassword);
-      adminPasswordText.textContent = `Current weekly password: ${currentPassword}`; // Update display
-
-      // Write password to file for backup (optional)
-      writeFileSync('selected_password.txt', currentPassword, 'utf8');
-      console.log("Password written to file.");
+      adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
     })
     .catch((error) => {
       console.error('Error setting weekly password:', error);
@@ -110,6 +84,20 @@ function setWeeklyPassword() {
 
 // Load the weekly password when the page loads
 loadWeeklyPassword();
+
+// Admin login for placing pixels
+const adminPasswordField = document.getElementById('adminPassword');
+const loginButton = document.getElementById('loginButton');
+
+loginButton.addEventListener('click', () => {
+  const enteredPassword = adminPasswordField.value;
+  if (enteredPassword === currentPassword) {
+    isUserAuthenticated = true;
+    alert('Authentication successful!');
+  } else {
+    alert('Incorrect password!');
+  }
+});
 
 // Initialize the canvas from Firebase
 function loadCanvas() {
@@ -188,19 +176,5 @@ canvas.addEventListener('click', (e) => {
     });
 });
 
-// Admin login for placing pixels
-const adminPasswordField = document.getElementById('adminPassword');
-const loginButton = document.getElementById('loginButton');
-
-loginButton.addEventListener('click', () => {
-  const enteredPassword = adminPasswordField.value;
-  if (enteredPassword === currentPassword) {
-    isUserAuthenticated = true;
-    alert('Authentication successful!');
-  } else {
-    alert('Incorrect password!');
-  }
-});
-
-// Initialize the canvas
+// Load canvas on page load
 loadCanvas();
