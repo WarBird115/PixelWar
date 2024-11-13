@@ -137,11 +137,11 @@
     const currentUserPasswordRef = ref(database, 'password/currentWeekPassword');
     let currentUserPassword = '';
 
-    // Retrieve password for the current week from Firebase
-onValue(currentUserPasswordRef, (snapshot) => {
-  currentUserPassword = snapshot.val();
-});
-
+    // Ensure password is retrieved immediately
+    onValue(currentUserPasswordRef, (snapshot) => {
+      currentUserPassword = snapshot.val();
+      console.log("Current week's password:", currentUserPassword); // Log for debugging
+    });
 
     // Handle password submission
     submitPasswordButton.addEventListener('click', () => {
@@ -151,7 +151,7 @@ onValue(currentUserPasswordRef, (snapshot) => {
         alert('Admin access granted! You can now clear the canvas.');
         document.getElementById('clearCanvasButton').style.display = 'block';
         document.getElementById('adminPasswordDisplay').style.display = 'block';
-        document.getElementById('adminPasswordText').textContent = currentUserPassword; // Display user password only for admin
+        document.getElementById('adminPasswordText').textContent = currentUserPassword || "Password not set"; // Display password for admin
         isUserAuthenticated = true; // Set to true for admin
       } else if (password === currentUserPassword) {
         alert('Access granted! You can now place a pixel.');
