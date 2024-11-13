@@ -19,8 +19,8 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth();
 
-// Firebase reference for the password node
-const passwordRef = ref(database, 'password/currentWeekPassword');
+// Firebase reference for the current week password node
+const passwordRef = ref(database, 'https://console.firebase.google.com/u/0/project/pixelwarnew/database/pixelwarnew-default-rtdb/data/~2F/Data/currentWeekPassword');
 
 // Weekly password display element
 const adminPasswordText = document.getElementById('adminPasswordText');
@@ -158,4 +158,3 @@ function loadCanvas() {
 
 // Load canvas on page load
 loadCanvas();
-
