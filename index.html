@@ -134,7 +134,7 @@
     const submitPasswordButton = document.getElementById('submitPassword');
 
     // Get password for the current week from Firebase
-    const currentUserPasswordRef = ref(database, 'passwords/currentWeekPassword');
+    const currentUserPasswordRef = ref(database, 'password/currentWeekPassword');
     let currentUserPassword = '';
 
     // Retrieve password for the current week from Firebase
