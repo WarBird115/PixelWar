@@ -20,7 +20,7 @@ const database = getDatabase(app);
 const auth = getAuth();
 
 // Firebase reference for the current week password node
-const passwordRef = ref(database, 'Data/Password/currentWeekPassword');
+const passwordRef = ref(database, 'Data/Password/currentWeekPassword/');
 
 // Weekly password display element
 const adminPasswordText = document.getElementById('adminPasswordText');
