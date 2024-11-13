@@ -72,20 +72,14 @@ loginButton.addEventListener('click', () => {
 });
 
 // Initialize the canvas from Firebase
-function loadCanvas() {
-  const pixelsRef = ref(database, 'pixels/');
-  onValue(pixelsRef, (snapshot) => {
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear existing canvas
-    snapshot.forEach((childSnapshot) => {
-      const pixelData = childSnapshot.val();
-      const [x, y] = childSnapshot.key.split(',').map(Number);
-      ctx.fillStyle = pixelData.color;
-      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-    });
-  });
-}
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const cooldownTimer = document.getElementById('cooldown-timer');
+const pixelSize = 10; // Pixel size
+const cooldownDuration = 5 * 60 * 1000; // 5 minutes cooldown
+let cooldownEndTime = null;
 
-// Check for cooldown
+// Check for cooldown from localStorage
 if (localStorage.getItem('cooldownEndTime')) {
   cooldownEndTime = parseInt(localStorage.getItem('cooldownEndTime'), 10);
   if (Date.now() < cooldownEndTime) {
@@ -148,5 +142,20 @@ canvas.addEventListener('click', (e) => {
     });
 });
 
+// Load canvas from Firebase
+function loadCanvas() {
+  const pixelsRef = ref(database, 'pixels/');
+  onValue(pixelsRef, (snapshot) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear existing canvas
+    snapshot.forEach((childSnapshot) => {
+      const pixelData = childSnapshot.val();
+      const [x, y] = childSnapshot.key.split(',').map(Number);
+      ctx.fillStyle = pixelData.color;
+      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    });
+  });
+}
+
 // Load canvas on page load
 loadCanvas();
+
