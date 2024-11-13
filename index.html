@@ -138,18 +138,10 @@
     let currentUserPassword = '';
 
     // Retrieve password for the current week from Firebase
-    onValue(currentUserPasswordRef, (snapshot) => {
-      currentUserPassword = snapshot.val();
-      if (!currentUserPassword) {
-        // If there's no password for the current week, create a new one
-        currentUserPassword = Math.random().toString(36).slice(-6).toUpperCase();
-        set(currentUserPasswordRef, currentUserPassword).then(() => {
-          console.log('New password generated and saved for the week.');
-        }).catch((error) => {
-          console.error('Error saving password:', error);
-        });
-      }
-    });
+onValue(currentUserPasswordRef, (snapshot) => {
+  currentUserPassword = snapshot.val();
+});
+
 
     // Handle password submission
     submitPasswordButton.addEventListener('click', () => {
