@@ -27,19 +27,25 @@ const adminPasswordText = document.getElementById('adminPasswordText');
 let currentPassword = ''; // Store the password from Firebase here
 let isUserAuthenticated = false; // Track user authentication status
 
+// Display loading message until password is fetched
+adminPasswordText.textContent = 'Loading password...';
+
 // Function to load the weekly password from Firebase
-function loadWeeklyPassword() {
-  get(passwordRef).then((snapshot) => {
+async function loadWeeklyPassword() {
+  try {
+    const snapshot = await get(passwordRef);
     if (snapshot.exists()) {
       currentPassword = snapshot.val();
+      console.log("Retrieved password:", currentPassword);
       adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
     } else {
       console.warn("Password does not exist; setting a new one.");
       setWeeklyPassword(); // Set the weekly password if not already set
     }
-  }).catch((error) => {
+  } catch (error) {
     console.error("Error retrieving password:", error);
-  });
+    adminPasswordText.textContent = 'Failed to load password.';
+  }
 }
 
 // Function to set the weekly password in Firebase (admin only)
