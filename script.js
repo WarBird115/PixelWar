@@ -27,36 +27,44 @@ const adminPasswordText = document.getElementById('adminPasswordText');
 let currentPassword = ''; // Store the password from Firebase here
 let isUserAuthenticated = false; // Track user authentication status
 
-// Display loading message until password is fetched
-adminPasswordText.textContent = 'Loading password...';
-
 // Function to load the weekly password from Firebase
-async function loadWeeklyPassword() {
-  try {
-    const snapshot = await get(passwordRef);
+function loadWeeklyPassword() {
+  adminPasswordText.textContent = 'Loading password...'; // Async loading message
+  console.log("Attempting to load the weekly password from Firebase...");
+
+  get(passwordRef).then((snapshot) => {
     if (snapshot.exists()) {
       currentPassword = snapshot.val();
-      console.log("Retrieved password:", currentPassword);
       adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
+      console.log("Password successfully loaded:", currentPassword);
     } else {
-      console.warn("Password does not exist; setting a new one.");
+      console.warn("Password not found in Firebase. Setting a new password.");
       setWeeklyPassword(); // Set the weekly password if not already set
     }
-  } catch (error) {
-    console.error("Error retrieving password:", error);
+  }).catch((error) => {
+    console.error("Error retrieving password from Firebase:", error);
     adminPasswordText.textContent = 'Failed to load password.';
-  }
+  });
 }
 
 // Function to set the weekly password in Firebase (admin only)
 function setWeeklyPassword() {
+  // Here, currentPassword should have a value from GitHub or another source.
+  // If it’s not set, log an error to investigate why.
+  if (!currentPassword) {
+    console.error("No password available to set. Make sure currentPassword is initialized from GitHub or another source.");
+    adminPasswordText.textContent = 'Error: No password to set.';
+    return;
+  }
+
   set(passwordRef, currentPassword)
     .then(() => {
-      console.log('Weekly password set:', currentPassword);
+      console.log('Weekly password successfully set in Firebase:', currentPassword);
       adminPasswordText.textContent = `Current weekly password: ${currentPassword}`;
     })
     .catch((error) => {
-      console.error('Error setting weekly password:', error);
+      console.error('Error setting weekly password in Firebase:', error);
+      adminPasswordText.textContent = 'Failed to set password.';
     });
 }
 
