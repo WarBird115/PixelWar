@@ -27,6 +27,9 @@ const adminPasswordText = document.getElementById('adminPasswordText');
 let currentPassword = ''; // Store the password from Firebase here
 let isUserAuthenticated = false; // Track user authentication status
 
+// Temporary password for regular users
+const regularUserPassword = "temporarypassword123"; // Set your temporary password here
+
 // Function to load the weekly password from Firebase
 function loadWeeklyPassword() {
   adminPasswordText.textContent = 'Loading password...'; // Async loading message
@@ -50,7 +53,6 @@ function loadWeeklyPassword() {
 // Function to set the weekly password in Firebase (admin only)
 function setWeeklyPassword() {
   // Here, currentPassword should have a value from GitHub or another source.
-  // If it’s not set, log an error to investigate why.
   if (!currentPassword) {
     console.error("No password available to set. Make sure currentPassword is initialized from GitHub or another source.");
     adminPasswordText.textContent = 'Error: No password to set.';
@@ -74,14 +76,26 @@ loadWeeklyPassword();
 // Admin login for placing pixels
 const adminPasswordField = document.getElementById('adminPassword');
 const loginButton = document.getElementById('loginButton');
+const regularUserPasswordField = document.getElementById('regularUserPassword'); // Input field for regular users
+const regularLoginButton = document.getElementById('regularLoginButton'); // Login button for regular users
 
 loginButton.addEventListener('click', () => {
   const enteredPassword = adminPasswordField.value;
   if (enteredPassword === currentPassword) {
     isUserAuthenticated = true;
-    alert('Authentication successful!');
+    alert('Admin Authentication successful!');
   } else {
-    alert('Incorrect password!');
+    alert('Incorrect admin password!');
+  }
+});
+
+regularLoginButton.addEventListener('click', () => {
+  const enteredPassword = regularUserPasswordField.value;
+  if (enteredPassword === regularUserPassword) {
+    isUserAuthenticated = true;
+    alert('Regular user Authentication successful!');
+  } else {
+    alert('Incorrect password for regular users!');
   }
 });
 
