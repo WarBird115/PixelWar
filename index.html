@@ -88,6 +88,11 @@
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
+    // Apply circular clipping to the canvas
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
+    ctx.clip();
+
     // Check for cooldown in localStorage
     const savedCooldownEndTime = localStorage.getItem('cooldownEndTime');
     if (savedCooldownEndTime && Date.now() < savedCooldownEndTime) {
