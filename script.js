@@ -28,7 +28,7 @@ let currentPassword = ''; // Store the password from Firebase here
 let isUserAuthenticated = false; // Track user authentication status
 
 // Temporary password for regular users
-const regularUserPassword = "v7Fgs6"; // Set your temporary password here
+const regularUserPassword = "HappyN3wY3ar"; // Set your temporary password here
 
 // Function to load the weekly password from Firebase
 function loadWeeklyPassword() {
